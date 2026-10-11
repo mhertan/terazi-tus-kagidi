@@ -1,0 +1,1229 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terazi Tuş Kağıdı</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Telefonlarda Bahnschrift yok: yerine dar Roboto Condensed (internet yoksa sorun değil, sistem fontuna düşer) -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #e9ecf0;
+    --panel: #ffffff;
+    --ink: #1c2229;
+    --mute: #5f6b7a;
+    --line: #d4d9e0;
+    --acc: #0b62c4;
+    --acc-ink: #ffffff;
+    --soft: #f3f5f8;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font: 14px/1.45 "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    min-height: 100vh;
+  }
+
+  /* ---------- Ayar paneli (ekranda) ---------- */
+  .ui {
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+    padding: 18px 18px 40px;
+    height: 100vh;
+    overflow-y: auto;
+    position: sticky;
+    top: 0;
+  }
+  .ui h1 { font-size: 19px; margin: 0; }
+  .ui .sub { color: var(--mute); margin: 2px 0 14px; font-size: 13px; }
+  .ui h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--mute); margin: 16px 0 6px; }
+  .seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button {
+    flex: 1; border: 0; background: var(--panel); padding: 8px 4px; font: inherit; font-weight: 600;
+    cursor: pointer; color: var(--ink); border-right: 1px solid var(--line);
+  }
+  .seg button:last-child { border-right: 0; }
+  .seg button.on { background: var(--acc); color: var(--acc-ink); }
+  .btn {
+    display: block; width: 100%; padding: 10px; margin-top: 10px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--soft); font: inherit; font-weight: 600; cursor: pointer; color: var(--ink);
+  }
+  .btn.primary { background: var(--acc); color: var(--acc-ink); border-color: var(--acc); font-size: 15px; }
+  .btn.small { display: inline-block; width: auto; padding: 6px 10px; margin: 6px 6px 0 0; font-size: 13px; }
+  .howto { background: var(--soft); border-radius: 8px; padding: 10px 12px 10px 28px; margin: 12px 0 0; font-size: 13px; }
+  .howto li { margin: 3px 0; }
+  details { border-top: 1px solid var(--line); padding: 8px 0; margin-top: 8px; }
+  summary { font-weight: 600; cursor: pointer; padding: 4px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; margin-top: 8px; }
+  label.f { display: flex; flex-direction: column; font-size: 12px; color: var(--mute); }
+  label.f input, label.f select {
+    margin-top: 3px; padding: 6px 8px; font: inherit; font-size: 14px; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 6px; background: var(--panel); width: 100%;
+  }
+  label.f input:disabled { background: var(--soft); color: var(--mute); }
+  label.c { display: flex; align-items: center; gap: 8px; margin-top: 7px; font-size: 13px; }
+  .hint { font-size: 12px; color: var(--mute); margin: 6px 0 0; }
+  textarea {
+    width: 100%; margin-top: 8px; font: 13px/1.4 Consolas, "Courier New", monospace; padding: 8px;
+    border: 1px solid var(--line); border-radius: 6px; resize: vertical; color: var(--ink); background: var(--panel);
+  }
+
+  /* ---------- Sayfa önizleme ---------- */
+  main { padding: 24px; overflow: auto; }
+  .pw { width: max-content; margin: 0 auto 24px; box-shadow: 0 2px 12px rgba(0,0,0,.18); overflow: hidden; background: #fff; }
+  .page {
+    width: 210mm; height: 297mm; position: relative; background: #fff; color: #000; overflow: hidden;
+    transform-origin: 0 0;
+  }
+  /* Çizgiler arka plan rengiyle çiziliyor: "Arka plan grafikleri" kapalı olsa da basılsın */
+  .page, .page * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page div { position: absolute; }
+  .ln { background: #000; }
+  .ln.grid { background: #222; }
+  .ln.frame { background: #b5b5b5; }
+  .ln.tick { background: #000; }
+  .hdr { font: 9pt Arial, sans-serif; color: #555; white-space: nowrap; }
+  .note { font: 8pt Arial, sans-serif; color: #555; white-space: nowrap; }
+  .rnum { font: 7pt Arial, sans-serif; color: #000; transform: translate(-50%, 0); }
+  .rnum.v { transform: translate(0, -50%); }
+  .cell { cursor: text; }
+  .cell .in { display: flex; align-items: center; justify-content: center; }
+  .cell .t {
+    position: static; display: block; width: 100%; text-align: center; color: #000;
+    white-space: pre-wrap; overflow-wrap: normal; word-break: normal; hyphens: none;
+    line-height: 1.06; outline: none;
+  }
+  .cell .t:focus { background: #fff6c8; }
+  .cell:hover .t:not(:focus) { background: #f1f6ff; }
+  .cell .num { font: 4.5pt Arial, sans-serif; color: #888; }
+  .up .t { text-transform: uppercase; }
+  .f-bahn .t { font-family: Bahnschrift, "Roboto Condensed", "Arial Narrow", Arial, sans-serif; font-stretch: 75%; font-weight: 700; }
+  .f-roboto .t { font-family: "Roboto Condensed", "Arial Narrow", Arial, sans-serif; font-weight: 700; }
+  .f-narrow .t { font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif; font-weight: 700; }
+  .f-arial .t { font-family: Arial, Roboto, sans-serif; font-weight: 700; }
+  .f-tahoma .t { font-family: Tahoma, Arial, sans-serif; font-weight: 700; }
+  .page .cell .t.s { font-weight: 400; }
+  .painting .cell { cursor: copy; }
+  .painting .cell .t { pointer-events: none; }
+  .cat-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .cat-row input[type=color] {
+    width: 34px; height: 30px; padding: 0 2px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--panel); cursor: pointer; flex: none;
+  }
+  .cat-row .sw { width: 34px; height: 30px; border: 1px dashed var(--line); border-radius: 6px; flex: none; }
+  .chip {
+    flex: 1; text-align: left; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--panel); font: inherit; cursor: pointer; color: var(--ink);
+  }
+  .chip.on { border-color: var(--acc); box-shadow: inset 0 0 0 1px var(--acc); font-weight: 600; }
+  .chip small { color: var(--mute); font-weight: 400; }
+  .paintbar {
+    display: none; margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--acc); color: var(--acc-ink);
+    font-size: 13px; align-items: center; gap: 8px;
+  }
+  .paintbar.on { display: flex; }
+  .paintbar span { flex: 1; }
+  .paintbar button {
+    border: 0; border-radius: 6px; padding: 5px 10px; font: inherit; font-weight: 600; cursor: pointer;
+    background: var(--acc-ink); color: var(--acc);
+  }
+  .ln.split { background: #8c8c8c; }
+  .ln.band { background: #a0a0a0; }
+  .cell.sel { outline: 0.6mm solid var(--acc); outline-offset: 0.3mm; z-index: 2; }
+
+  /* ---------- Telefon ---------- */
+  .mbar { display: none; }
+  .mobile .cell .t { pointer-events: none; }
+  .mobile .cell:hover .t:not(:focus) { background: none; }
+  @media (max-width: 820px) {
+    body { display: flex; flex-direction: column; }
+    .ui { order: 2; height: auto; position: static; border-right: 0; border-top: 1px solid var(--line); padding: 14px 14px 40px; }
+    .ui > h1, .ui > .sub, .ui > h2, #showSeg, #printBtn { display: none; }
+    main { padding: 10px 8px 4px; overflow: visible; }
+    .mbar { display: block; margin: 0 0 10px; }
+    .mbar .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+    .mbar h1 { font-size: 17px; margin: 0; }
+    .mbar .btn { margin: 0; width: auto; padding: 8px 18px; }
+    .mbar .hint { margin: 6px 2px 0; }
+    .pw { margin: 0 auto 12px; }
+  }
+
+  /* Tuş düzenleme penceresi (telefonda tuşa dokununca) */
+  .sheet { position: fixed; inset: 0; background: rgba(15, 20, 30, .35); display: none; align-items: flex-end; justify-content: center; z-index: 50; }
+  .sheet.on { display: flex; }
+  .sheet-card {
+    background: var(--panel); width: 100%; max-width: 520px; border-radius: 14px 14px 0 0; padding: 14px 16px 18px;
+    box-shadow: 0 -4px 24px rgba(0,0,0,.2); max-height: 85vh; overflow-y: auto;
+  }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .sheet-head b { font-size: 15px; }
+  .sheet-head button { border: 0; background: none; font-size: 22px; line-height: 1; padding: 4px 8px; cursor: pointer; color: var(--mute); }
+  .sheet label.f { margin-top: 10px; font-size: 13px; }
+  .sheet label.f input { font-size: 17px; padding: 10px; }
+  .catpick { display: flex; gap: 6px; margin-top: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+  .catpick::-webkit-scrollbar { display: none; }
+  .catpick button {
+    border: 1px solid var(--line); border-radius: 16px; padding: 6px 11px; font: inherit; font-size: 13px; cursor: pointer;
+    background: var(--panel); color: var(--ink); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; flex: none;
+  }
+  .catpick button i { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,.2); display: inline-block; }
+  .catpick button.on { border-color: var(--acc); box-shadow: inset 0 0 0 1px var(--acc); font-weight: 600; }
+  .sheet-nav { display: flex; gap: 8px; margin-top: 14px; }
+  .sheet-nav .btn { margin: 0; }
+  .sheet-nav .btn.primary { flex: 1.4; }
+
+  @media print {
+    @page { size: A4 portrait; margin: 0; }
+    body { display: block; background: #fff; }
+    .ui, .mbar, .sheet { display: none !important; }
+    main { padding: 0; }
+    .pw { width: auto !important; height: auto !important; overflow: visible !important; margin: 0; box-shadow: none; }
+    /* Kağıttan dar/kısa tutuldu: telefon tarayıcıları kendi kenar boşluğunu ekleyince küçültmeye kalkmasın */
+    .page { width: 175mm; height: 230mm; transform: none !important; break-after: page; }
+    .pw:last-child .page { break-after: auto; }
+    .cell .t:focus, .cell:hover .t:not(:focus) { background: none; }
+    .cell.sel { outline: none; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="ui">
+  <h1>Terazi Tuş Kağıdı</h1>
+  <p class="sub">CAS CL3000 hızlı tuş şablonu · milimetrik baskı</p>
+
+  <h2>Yazdırılacak</h2>
+  <div class="seg" id="showSeg">
+    <button data-v="P">CL3000P</button>
+    <button data-v="B">CL3000B</button>
+    <button data-v="PB">İkisi</button>
+  </div>
+  <label class="c" style="margin-top:10px"><input type="checkbox" data-o="shift"> <span><b>Shift sayfası:</b> hücreyi ikiye böl (üst normal, alt shift)</span></label>
+  <button class="btn primary" id="printBtn">Yazdır</button>
+
+  <ol class="howto">
+    <li>Hücreye tıkla, ismi yaz. Satır atlamak için <b>Enter</b>. Shift açıkken üst yarı normal tuş, alt yarı (ince yazı) shift tuşu.</li>
+    <li>Yazdır ekranında <b>Ölçek: Varsayılan (100)</b>, <b>Kenar boşlukları: Varsayılan</b>. "Sayfaya sığdır" gibi bir seçenek varsa kapat.</li>
+    <li>Kağıttaki cetveli ölç. 100 mm değilse, ölçtüğün değeri aşağıda <b>Kalibrasyon</b>'a yaz ve tekrar bas.</li>
+    <li>Köşedeki kesim işaretlerinden kes, tuş takımına koy. Çizgiler ayraçlara oturmuyorsa ölçüleri aşağıdan düzelt.</li>
+  </ol>
+
+  <details open id="colors"><summary>Renkler</summary>
+    <label class="c"><input type="checkbox" data-o="colors"> Hücreleri türüne göre renklendir</label>
+    <div id="catList"></div>
+    <div class="paintbar" id="paintBar"><span id="paintMsg"></span><button type="button" id="paintDone">Bitti</button></div>
+    <p class="hint">Tür isimden otomatik bulunur. Yanlışsa türün adına bas, sonra hücreye (shift açıksa üst ya da alt yarısına) tıkla. Rengi değiştirmek için renk kutusuna bas.</p>
+  </details>
+
+  <details id="dimP"><summary>CL3000P ölçüleri</summary></details>
+  <details id="dimB"><summary>CL3000B ölçüleri</summary></details>
+
+  <details id="calib"><summary>Kalibrasyon</summary>
+    <p class="hint">Kağıttaki 100 mm cetveli gerçek cetvelle ölç, okuduğun değeri yaz (örn. 98,5). Şablon buna göre büyütülür/küçültülür.</p>
+    <div class="grid2">
+      <label class="f">Yatay cetvel (mm)<input data-o="calX" inputmode="decimal"></label>
+      <label class="f">Dikey cetvel (mm)<input data-o="calY" inputmode="decimal"></label>
+    </div>
+  </details>
+
+  <details id="look"><summary>Görünüm</summary>
+    <div class="grid2">
+      <label class="f" style="grid-column:1/-1">Yazı tipi
+        <select data-o="font">
+          <option value="bahn">Bahnschrift dar (Windows 10/11)</option>
+          <option value="roboto">Roboto Condensed (her cihazda aynı, internet ister)</option>
+          <option value="narrow">Arial Narrow</option>
+          <option value="arial">Arial</option>
+          <option value="tahoma">Tahoma</option>
+        </select>
+      </label>
+      <label class="f">En büyük punto<input data-o="maxPt" inputmode="decimal"></label>
+      <label class="f">En küçük punto<input data-o="minPt" inputmode="decimal"></label>
+      <label class="f" style="grid-column:1/-1">Hücre çizgileri
+        <select data-o="lines">
+          <option value="box">Her hücreye çerçeve (ayraç boşluğu görünür)</option>
+          <option value="fill">Ayraçları gri şerit olarak boya</option>
+          <option value="mid">Ayracın ortasında tek çizgi</option>
+          <option value="none">Çizgi yok</option>
+        </select>
+      </label>
+      <label class="f">Çizgi kalınlığı (mm)<input data-o="lineW" inputmode="decimal"></label>
+    </div>
+    <label class="c"><input type="checkbox" data-o="upper"> Hepsi büyük harf</label>
+    <label class="c"><input type="checkbox" data-o="hyph"> Uzun kelimeyi heceden böl (SALA-TALIK)</label>
+    <label class="c"><input type="checkbox" data-o="frame"> Kağıt kenar çizgisi (açık gri)</label>
+    <label class="c"><input type="checkbox" data-o="crop"> Köşe kesim işaretleri</label>
+    <label class="c"><input type="checkbox" data-o="nums"> Tuş numaraları (küçük, köşede)</label>
+    <label class="c"><input type="checkbox" data-o="rulers"> 100 mm kontrol cetveli</label>
+  </details>
+
+  <details id="bulk"><summary>İsim listesi (toplu düzenle)</summary>
+    <div class="seg" id="bulkSeg" style="margin-top:8px">
+      <button data-v="P">CL3000P</button>
+      <button data-v="B">CL3000B</button>
+    </div>
+    <div class="seg" id="layerSeg" style="margin-top:6px">
+      <button data-v="names">Normal</button>
+      <button data-v="shift">Shift</button>
+    </div>
+    <p class="hint">Her satır bir tuş, soldan sağa, yukarıdan aşağı. Tuş içinde alt satıra geçmek için <b>/</b> koy. Boş satır = boş tuş. # ile başlayan satırlar sadece açıklama.</p>
+    <textarea id="bulkText" rows="22" spellcheck="false"></textarea>
+    <button class="btn small" id="bulkApply">Uygula</button>
+    <button class="btn small" id="bulkCopy">Diğer teraziye de kopyala</button>
+  </details>
+
+  <details id="xfer"><summary>Telefona / başka cihaza aktar</summary>
+    <p class="hint">Buradaki tüm isimleri, renkleri ve ölçüleri tek bir linke koyar. Linki WhatsApp ile kendine gönder, telefonda aç, isimler oraya yüklenir. Ters yönde de çalışır.</p>
+    <button class="btn small" id="xferBtn" type="button">Aktarım linki oluştur</button>
+    <textarea id="xferOut" rows="3" readonly style="display:none"></textarea>
+    <p class="hint" id="xferMsg"></p>
+  </details>
+
+  <button class="btn" id="resetDims">Ölçüleri varsayılana döndür</button>
+  <p class="hint">Yazdıkların bu bilgisayarda bu tarayıcıda otomatik saklanır.</p>
+</aside>
+
+<main id="main">
+  <div class="mbar">
+    <div class="top"><h1>Terazi Tuş Kağıdı</h1><button class="btn primary" id="printBtnM" type="button">Yazdır</button></div>
+    <div class="seg" id="showSegM">
+      <button data-v="P">CL3000P</button>
+      <button data-v="B">CL3000B</button>
+      <button data-v="PB">İkisi</button>
+    </div>
+    <p class="hint">Tuşa dokun, ismini yaz. Renkler ve ayarlar sayfanın altında.</p>
+  </div>
+  <div id="pages"></div>
+</main>
+
+<div class="sheet" id="sheet">
+  <div class="sheet-card" role="dialog" aria-label="Tuş düzenle">
+    <div class="sheet-head"><b id="sheetTitle"></b><button type="button" id="sheetClose" aria-label="Kapat">×</button></div>
+    <label class="f">Normal tuş<input id="edN" autocomplete="off" enterkeyhint="next"></label>
+    <div class="catpick" id="catN"></div>
+    <div id="shiftBox">
+      <label class="f">Shift tuşu (alt yarı)<input id="edS" autocomplete="off" enterkeyhint="done"></label>
+      <div class="catpick" id="catS"></div>
+    </div>
+    <p class="hint">Alt satıra geçirmek için araya <b>/</b> koy (örn. ÇERİ / DOMATES).</p>
+    <div class="sheet-nav">
+      <button class="btn" type="button" id="sheetPrev">‹ Önceki</button>
+      <button class="btn" type="button" id="sheetNext">Sonraki ›</button>
+      <button class="btn primary" type="button" id="sheetDone">Tamam</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var KEY = 'terazi-tus-kagidi-v4', OLD_KEY = 'terazi-tus-kagidi-v3';
+
+  // CL-Works ekranındaki dizilim (8 sütun x 9 sıra, soldan sağa)
+  var NAMES = [
+    'DOMATES', 'ÇERİ DOMATES', 'PEMBE DOMATES', 'KÖY DOMATES', 'SALKIM DOMATES', 'SALATALIK', 'PATATES', 'SOĞAN',
+    'MOR SOĞAN', 'ARPACIK SOĞAN', 'DOLMA BİBER', 'ÇARLİSTON', 'SİVRİ BİBER', 'KÖY BİBERİ', 'KIRMIZI BİBER', 'TAZE FASULYE',
+    'PATLICAN', 'KABAK', 'PIRASA', 'BEZELYE', 'LAHANA', 'BAMYA', 'KARNIBAHAR', 'KARALAHANA',
+    'KIRMIZI TURP', 'SARIMSAK', 'HAVUÇ', 'LİMON', 'ISPANAK', 'KEREVİZ', 'TATLI KABAK', 'BROKOLİ',
+    'BAKLA', 'PANCAR', 'STARKİN ELMA', 'GOLDEN ELMA', 'EKŞİ ELMA', 'AMASYA ELMA', 'ARMUT SANTA', 'DEVECİ ARMUT',
+    'İTHAL MUZ', 'YERLİ MUZ', 'ŞEFTALİ', 'NEKTARİN', 'AYVA', 'NAR', 'MANDALİNA', 'PORTAKAL',
+    'SIKMA PORTAKAL', 'ÜZÜM', 'ÇEKİRDEKSİZ ÜZÜM', 'RED GLOBE', 'ERİK', 'ANGELİCA ERİK', 'MÜRDÜM ERİK', 'TRABZON HURMASI',
+    'KİVİ', 'KAVUN', 'KARPUZ', 'SİYAH KARPUZ', 'KİRAZ', 'VİŞNE', 'İNCİR', 'GREYFURT',
+    'ÇİLEK', 'KAYISI', 'MALTA ERİĞİ', 'KABUKLU CEVİZ', 'KESTANE', 'EDİRNE PEYNİRİ', 'EREL ZEYTİN', 'TRAKYA ESKİ KAŞAR'
+  ];
+
+  // w/h: ayraçlar dahil iç alan (içten içe). P: (119 - 7 x 1) / 8 = 14 mm hücre.
+  // B: 13,9 mm ölçülen hücreye göre ayraç ~0,5 mm -> (114,5 - 7 x 0,5) / 8 = 13,875 mm
+  var DEF_MODELS = {
+    P: { label: 'CL3000P', w: 119, h: 146, cols: 8, rows: 9, gx: 1, gy: 1, auto: true, cw: 14, ch: 14, dx: 0, dy: 0, bleed: 0 },
+    B: { label: 'CL3000B', w: 114.5, h: 134.5, cols: 8, rows: 9, gx: 0.5, gy: 0.5, auto: true, cw: 13.9, ch: 13.9, dx: 0, dy: 0, bleed: 0 }
+  };
+  var DEF_OPTS = {
+    show: 'P', calX: 100, calY: 100, font: 'bahn', maxPt: 11, minPt: 5, lineW: 0.2, lines: 'box',
+    shift: true, upper: true, hyph: true, frame: true, crop: true, nums: false, rulers: true,
+    colors: true, catColors: {}
+  };
+
+  // Hücre renkleri: açık tonlar, üstündeki siyah yazı rahat okunsun
+  var CATS = [
+    { id: 'meyve', label: 'Meyve', color: '#f7c6d3' },
+    { id: 'sebze', label: 'Sebze', color: '#fce89a' },
+    { id: 'yesil', label: 'Yeşillik', color: '#c8e6b5' },
+    { id: 'kuru', label: 'Kuruyemiş', color: '#e6cfae' },
+    { id: 'sark', label: 'Peynir / şarküteri', color: '#c9def5' }
+  ];
+  // Önce iki kelimelik ifadeler, sonra sırayla tek kelimeler bakılır:
+  // KABAK ÇEKİRDEĞİ kuruyemiş (KABAK değil), TAZE SOĞAN yeşillik, TRABZON HURMASI meyve
+  var CAT_RULES = [
+    ['kuru', ['ÇEKİRDEK', 'ÇEKİRDEĞİ', 'FISTIK', 'FISTIĞI', 'FINDIK', 'CEVİZ', 'BADEM', 'KAJU', 'LEBLEBİ', 'KESTANE',
+      'LOKUM', 'PESTİL', 'KÖME', 'CEZERYE', 'ÇEREZ', 'HURMA', 'KURUYEMİŞ', 'KURU ÜZÜM', 'KURU KAYISI', 'KURU İNCİR',
+      'KURU ERİK', 'KURU DUT', 'KURU MEYVE']],
+    ['sark', ['PEYNİR', 'KAŞAR', 'ZEYTİN', 'TULUM', 'LOR', 'ÇÖKELEK', 'SUCUK', 'PASTIRMA', 'SALAM', 'SOSİS',
+      'TEREYAĞ', 'TEREYAĞI', 'YOĞURT', 'BAL', 'REÇEL', 'HELVA', 'TAHİN', 'PEKMEZ']],
+    ['yesil', ['MAYDANOZ', 'DEREOTU', 'NANE', 'ROKA', 'TERE', 'MARUL', 'KIVIRCIK', 'SEMİZOTU', 'PAZI', 'REYHAN',
+      'FESLEĞEN', 'EBEGÜMECİ', 'ISIRGAN', 'TAZE SOĞAN', 'YEŞİL SOĞAN', 'ASMA YAPRAĞI']],
+    ['meyve', ['ELMA', 'ARMUT', 'ARMUDU', 'MUZ', 'PORTAKAL', 'MANDALİNA', 'MANDARİN', 'LİMON', 'GREYFURT', 'ŞEFTALİ',
+      'NEKTARİN', 'AYVA', 'NAR', 'ÜZÜM', 'GLOBE', 'ERİK', 'ERİĞİ', 'KİVİ', 'KAVUN', 'KARPUZ', 'KİRAZ', 'VİŞNE',
+      'İNCİR', 'ÇİLEK', 'ÇİLEĞİ', 'KAYISI', 'ANANAS', 'AVOKADO', 'MANGO', 'DUT', 'BÖĞÜRTLEN', 'AHUDUDU', 'MUŞMULA',
+      'KIZILCIK', 'YENİDÜNYA', 'LİÇİ', 'PAPAYA', 'BERGAMOT', 'KUMKUAT', 'TRABZON HURMASI', 'CENNET HURMASI',
+      'YABAN MERSİNİ']],
+    ['sebze', ['DOMATES', 'SALATALIK', 'HIYAR', 'PATATES', 'SOĞAN', 'SARIMSAK', 'BİBER', 'ÇARLİSTON', 'FASULYE',
+      'BARBUNYA', 'BÖRÜLCE', 'PATLICAN', 'KABAK', 'KABAĞI', 'BALKABAĞI', 'PIRASA', 'BEZELYE', 'LAHANA', 'KARALAHANA',
+      'BAMYA', 'KARNIBAHAR', 'BROKOLİ', 'TURP', 'HAVUÇ', 'ISPANAK', 'KEREVİZ', 'BAKLA', 'PANCAR', 'ENGİNAR', 'MANTAR',
+      'MISIR', 'KUŞKONMAZ', 'ZENCEFİL', 'YER ELMASI']]
+  ];
+  // Kelime sonuna gelebilen iyelik ekleri (BİBERİ, ELMASI, PEYNİRİ); ÇEKİRDEKSİZ gibi ekler eşleşmez
+  var SUFFIXES = ['', 'I', 'İ', 'U', 'Ü', 'SI', 'Sİ', 'SU', 'SÜ', 'LARI', 'LERİ'];
+  var DIM_FIELDS = [
+    ['w', 'İç alan eni (mm)'], ['h', 'İç alan boyu (mm)'],
+    ['cols', 'Sütun'], ['rows', 'Sıra'],
+    ['gx', 'Ayraç, sütun arası (mm)'], ['gy', 'Ayraç, sıra arası (mm)'],
+    ['cw', 'Hücre eni (mm)'], ['ch', 'Hücre boyu (mm)'],
+    ['dx', 'Sağa kaydır (mm)'], ['dy', 'Aşağı kaydır (mm)'],
+    ['bleed', 'Kesim payı, her yandan (mm)']
+  ];
+
+  // Sayfa üzerindeki yerleşim (mm): kağıdın sol üst köşesi
+  var SX = 18, SY = 22, GAP = 1.5, MARK = 6;
+  var SPLIT = 0.8;  // shift bölmesinde iki yarı arasındaki boşluk (mm)
+
+  function defaultNames() {
+    var m = {};
+    NAMES.forEach(function (t, i) { m[Math.floor(i / 8) + '-' + (i % 8)] = t; });
+    return m;
+  }
+  function copy(o) { return JSON.parse(JSON.stringify(o)); }
+
+  function load() {
+    var s = null, old = false;
+    try {
+      s = JSON.parse(localStorage.getItem(KEY));
+      if (!s) { s = JSON.parse(localStorage.getItem(OLD_KEY)); old = !!s; }
+    } catch (e) { s = null; }
+    var base = { opts: copy(DEF_OPTS), models: {} };
+    ['P', 'B'].forEach(function (k) {
+      base.models[k] = copy(DEF_MODELS[k]);
+      base.models[k].names = defaultNames();
+      base.models[k].shift = {};
+      base.models[k].cat = {};  // elle boyananlar: 'names:0-3' -> 'meyve' | 'none'
+    });
+    if (s && s.models) {
+      if (old && s.opts) { delete s.opts.lines; delete s.opts.shift; }  // eski kayıtta yeni varsayılanlar geçerli
+      Object.assign(base.opts, s.opts || {});
+      ['P', 'B'].forEach(function (k) { if (s.models[k]) Object.assign(base.models[k], s.models[k]); });
+    }
+    return base;
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* tarayıcı izin vermiyorsa sorun değil */ }
+  }
+
+  var S = load();
+  var qp = new URLSearchParams(location.search);
+  if (/^(P|B|PB)$/.test(qp.get('show') || '')) S.opts.show = qp.get('show');
+  var bulkModel = 'P', bulkLayer = 'names';
+  var kx = 1, ky = 1;
+
+  function num(v) { return parseFloat(String(v).replace(',', '.')); }
+  function fmt(v) { return String(Math.round(v * 100) / 100).replace('.', ','); }
+  function mm(v) { return v.toFixed(3) + 'mm'; }
+  function el(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
+  function abs(e, l, t, w, h) {
+    e.style.left = mm(l); e.style.top = mm(t);
+    if (w != null) e.style.width = mm(w);
+    if (h != null) e.style.height = mm(h);
+    return e;
+  }
+  // Çizgiler verilen koordinatın tam ortasına oturur, kalınlık ölçüyü kaydırmaz
+  function hline(par, x1, x2, y, th, cls) {
+    par.appendChild(abs(el('div', 'ln ' + (cls || '')), x1 * kx, y * ky - th / 2, (x2 - x1) * kx, th));
+  }
+  function vline(par, x, y1, y2, th, cls) {
+    par.appendChild(abs(el('div', 'ln ' + (cls || '')), x * kx - th / 2, y1 * ky, th, (y2 - y1) * ky));
+  }
+  function rect(par, x, y, w, h, cls) {
+    par.appendChild(abs(el('div', 'ln ' + cls), x * kx, y * ky, w * kx, h * ky));
+  }
+  function text(par, cls, x, y, str) {
+    var e = abs(el('div', cls), x * kx, y * ky);
+    e.textContent = str;
+    par.appendChild(e);
+    return e;
+  }
+
+  // ---------- Renk / tür ----------
+  function autoCat(name) {
+    var words = name.toLocaleUpperCase('tr-TR').split(/[^\p{L}]+/u).filter(Boolean);
+    if (!words.length) return null;
+    var padded = ' ' + words.join(' ') + ' ', i, j, kw;
+    for (i = 0; i < CAT_RULES.length; i++) {
+      for (j = 0; j < CAT_RULES[i][1].length; j++) {
+        kw = CAT_RULES[i][1][j];
+        if (kw.indexOf(' ') >= 0 && padded.indexOf(' ' + kw + ' ') >= 0) return CAT_RULES[i][0];
+      }
+    }
+    for (i = 0; i < CAT_RULES.length; i++) {
+      for (j = 0; j < CAT_RULES[i][1].length; j++) {
+        kw = CAT_RULES[i][1][j];
+        if (kw.indexOf(' ') >= 0) continue;
+        for (var w = 0; w < words.length; w++) {
+          if (words[w].indexOf(kw) === 0 && SUFFIXES.indexOf(words[w].slice(kw.length)) >= 0) return CAT_RULES[i][0];
+        }
+      }
+    }
+    return null;
+  }
+  function catOf(m, layer, key) {
+    var ov = m.cat[layer + ':' + key];
+    if (ov === 'none') return null;
+    return ov || autoCat(m[layer][key] || '');
+  }
+  function catColor(id) {
+    if (S.opts.catColors[id]) return S.opts.catColors[id];
+    for (var i = 0; i < CATS.length; i++) if (CATS[i].id === id) return CATS[i].color;
+    return 'transparent';
+  }
+  function paintFill(f) {
+    var c = catOf(S.models[f.dataset.model], f.dataset.layer, f.dataset.key);
+    f.style.background = S.opts.colors && c ? catColor(c) : 'transparent';
+  }
+
+  // Otomatikte hücre, ölçülen iç alandan hesaplanır: en = 8 hücre + 7 ayraç
+  function geom(m) {
+    var cw = m.auto ? (m.w - (m.cols - 1) * m.gx) / m.cols : m.cw;
+    var ch = m.auto ? (m.h - (m.rows - 1) * m.gy) / m.rows : m.ch;
+    return { cw: cw, ch: ch, gw: m.cols * cw + (m.cols - 1) * m.gx, gh: m.rows * ch + (m.rows - 1) * m.gy };
+  }
+
+  function ruler(page, x, y, vertical) {
+    var th = 0.15;
+    if (vertical) vline(page, x, y, y + 100, th, 'tick');
+    else hline(page, x, x + 100, y, th, 'tick');
+    for (var i = 0; i <= 100; i++) {
+      var len = i % 10 === 0 ? 3.2 : (i % 5 === 0 ? 2 : 1.1);
+      if (vertical) hline(page, x, x + len, y + i, th, 'tick');
+      else vline(page, x + i, y, y + len, th, 'tick');
+      if (i % 10 === 0) {
+        if (vertical) text(page, 'rnum v', x + 4, y + i, String(i / 10));
+        else text(page, 'rnum', x + i, y + 4, String(i / 10));
+      }
+    }
+  }
+
+  function buildPage(k) {
+    var m = S.models[k], o = S.opts;
+    var page = el('div', 'page f-' + o.font + (o.upper ? ' up' : ''));
+    var g = geom(m), b = m.bleed || 0;
+    var PW = m.w + 2 * b, PH = m.h + 2 * b;   // kesilecek kağıt
+    var AX = SX + b, AY = SY + b;              // ölçülen iç alan
+    var px = g.cw + m.gx, py = g.ch + m.gy;
+    var ox = AX + (m.w - g.gw) / 2 + m.dx;
+    var oy = AY + (m.h - g.gh) / 2 + m.dy;
+
+    text(page, 'hdr', SX, 9, 'CAS ' + m.label + '  ·  iç alan ' + fmt(m.w) + ' × ' + fmt(m.h) + ' mm  ·  hücre ' +
+      fmt(g.cw) + ' × ' + fmt(g.ch) + ' mm  ·  ayraç ' + fmt(m.gx) + (m.gx === m.gy ? '' : ' / ' + fmt(m.gy)) +
+      ' mm  ·  ' + m.cols + '×' + m.rows + ' tuş' + (b ? '  ·  kesim payı ' + fmt(b) + ' mm' : ''));
+
+    if (o.frame) {
+      hline(page, SX, SX + PW, SY, 0.15, 'frame');
+      hline(page, SX, SX + PW, SY + PH, 0.15, 'frame');
+      vline(page, SX, SY, SY + PH, 0.15, 'frame');
+      vline(page, SX + PW, SY, SY + PH, 0.15, 'frame');
+    }
+    if (o.crop) {
+      [[SX, SY, -1, -1], [SX + PW, SY, 1, -1], [SX, SY + PH, -1, 1], [SX + PW, SY + PH, 1, 1]].forEach(function (c) {
+        var x = c[0], y = c[1], sx = c[2], sy = c[3];
+        var hx1 = sx < 0 ? x - GAP - MARK : x + GAP, vy1 = sy < 0 ? y - GAP - MARK : y + GAP;
+        hline(page, hx1, hx1 + MARK, y, 0.2);
+        vline(page, x, vy1, vy1 + MARK, 0.2);
+      });
+    }
+
+    for (var r = 0; r < m.rows; r++) {
+      for (var c = 0; c < m.cols; c++) {
+        var key = r + '-' + c;
+        var cell = abs(el('div', 'cell'), (ox + c * px) * kx, (oy + r * py) * ky, g.cw * kx, g.ch * ky);
+        var pad = 1;  // yazı ayraç çıkıntısının altında kalmasın
+        var iw = g.cw * kx - 2 * pad, ih = g.ch * ky - 2 * pad;
+        // Shift açıkken üst yarı normal tuş, alt yarı shift tuşu
+        var layers = o.shift ? ['names', 'shift'] : ['names'];
+        var lh = o.shift ? (ih - SPLIT) / 2 : ih;
+        for (var li = 0; li < layers.length; li++) {
+          // Zemin rengi hücrenin (shift'te yarısının) tamamını kaplar, çerçeve üstüne çizilir
+          var fh = g.ch * ky / layers.length;
+          var fill = abs(el('div', 'fill'), 0, li * fh, g.cw * kx, fh);
+          fill.dataset.model = k;
+          fill.dataset.layer = layers[li];
+          fill.dataset.key = key;
+          paintFill(fill);
+          cell.appendChild(fill);
+          var inner = abs(el('div', 'in'), pad, pad + li * (lh + SPLIT), iw, lh);
+          var t = el('span', 't' + (layers[li] === 'shift' ? ' s' : ''));
+          if (!MOBILE) t.setAttribute('contenteditable', 'plaintext-only');
+          t.dataset.model = k;
+          t.dataset.layer = layers[li];
+          t.dataset.key = key;
+          t.textContent = m[layers[li]][key] || '';
+          inner.appendChild(t);
+          cell.appendChild(inner);
+        }
+        if (o.shift) cell.appendChild(abs(el('div', 'ln split'), 1.2, g.ch * ky / 2 - 0.075, g.cw * kx - 2.4, 0.15));
+        if (o.nums) {
+          var n = abs(el('div', 'num'), 0.5, 0.3);
+          n.textContent = r * m.cols + c + 1;
+          cell.appendChild(n);
+        }
+        page.appendChild(cell);
+      }
+    }
+
+    var lw = o.lineW, i, j;
+    if (o.lines === 'mid') {
+      // Tek çizgi, ayracın tam ortasında; dış çizgi ölçülen iç alanın dışına taşmaz
+      var xs = [], ys = [];
+      for (i = 0; i <= m.cols; i++) xs.push(ox + i * px - m.gx / 2);
+      for (j = 0; j <= m.rows; j++) ys.push(oy + j * py - m.gy / 2);
+      xs[0] = Math.max(xs[0], AX + lw / 2);
+      xs[m.cols] = Math.min(xs[m.cols], AX + m.w - lw / 2);
+      ys[0] = Math.max(ys[0], AY + lw / 2);
+      ys[m.rows] = Math.min(ys[m.rows], AY + m.h - lw / 2);
+      var x0 = xs[0] - lw / 2, x1 = xs[m.cols] + lw / 2, y0 = ys[0] - lw / 2, y1 = ys[m.rows] + lw / 2;
+      xs.forEach(function (x) { vline(page, x, y0, y1, lw, 'grid'); });
+      ys.forEach(function (y) { hline(page, x0, x1, y, lw, 'grid'); });
+    } else if (o.lines === 'box') {
+      // Çerçeve hücrenin içine çizilir, aradaki ayraç boşluğu tam ölçüsünde beyaz kalır
+      for (j = 0; j < m.rows; j++) {
+        for (i = 0; i < m.cols; i++) {
+          var cx = ox + i * px, cy = oy + j * py;
+          hline(page, cx, cx + g.cw, cy + lw / 2, lw, 'grid');
+          hline(page, cx, cx + g.cw, cy + g.ch - lw / 2, lw, 'grid');
+          vline(page, cx + lw / 2, cy, cy + g.ch, lw, 'grid');
+          vline(page, cx + g.cw - lw / 2, cy, cy + g.ch, lw, 'grid');
+        }
+      }
+    } else if (o.lines === 'fill') {
+      for (i = 1; i < m.cols; i++) rect(page, ox + i * px - m.gx, oy, m.gx, g.gh, 'band');
+      for (j = 1; j < m.rows; j++) rect(page, ox, oy + j * py - m.gy, g.gw, m.gy, 'band');
+      hline(page, ox, ox + g.gw, oy + lw / 2, lw, 'grid');
+      hline(page, ox, ox + g.gw, oy + g.gh - lw / 2, lw, 'grid');
+      vline(page, ox + lw / 2, oy, oy + g.gh, lw, 'grid');
+      vline(page, ox + g.gw - lw / 2, oy, oy + g.gh, lw, 'grid');
+    }
+
+    if (o.rulers) {
+      var ry = SY + PH + 16, rx = SX + PW + 16;
+      ruler(page, SX, ry, false);
+      ruler(page, rx, SY, true);
+      text(page, 'note', SX, ry + 9, 'Bu cetvel tam 100 mm (10 cm) olmalı. Değilse ölçtüğün değeri Kalibrasyon kutusuna yaz.');
+      text(page, 'note', SX, ry + 13, 'Yazdırırken ölçek %100 (Varsayılan) olsun, "sayfaya sığdır" kapalı olsun.');
+    }
+    return page;
+  }
+
+  // ---------- Yazıyı hücreye sığdırma ----------
+  var VOWELS = 'AEIİOÖUÜÂÎÛaeıioöuüâîû';
+  function isV(ch) { return VOWELS.indexOf(ch) >= 0; }
+  function isL(ch) { return /\p{L}/u.test(ch); }
+  // Türkçe hece sınırı: ünlüden önceki ünsüzün önü (SA-LA-TA-LIK) ya da iki ünlü arası
+  function breakPoints(w) {
+    var pts = [], seenV = false;
+    for (var i = 1; i < w.length; i++) {
+      var a = w[i - 1], b = w[i];
+      if (isV(a)) seenV = true;
+      if (!isL(a) || !isL(b) || !seenV) continue;
+      if ((!isV(b) && i + 1 < w.length && isV(w[i + 1])) || (isV(a) && isV(b))) pts.push(i);
+    }
+    return pts.filter(function (i) { return i >= 3 && w.length - i >= 3; });
+  }
+  function candidates(raw) {
+    var list = [];
+    if (!S.opts.hyph || raw.indexOf('\n') >= 0) return list;
+    var words = raw.split(' ');
+    words.forEach(function (w, wi) {
+      breakPoints(w).forEach(function (p) {
+        var ws = words.slice();
+        ws[wi] = w.slice(0, p) + '-\n' + w.slice(p);
+        list.push(ws.join(' '));
+      });
+    });
+    return list;
+  }
+  // Verilen metnin sığdığı en büyük punto (0,25'lik adımlarla ikili arama)
+  function bestSize(t, str, W, H, min, max) {
+    if (str != null && t.textContent !== str) t.textContent = str;  // null: metne dokunma (imleç kaymasın)
+    function ok(q) {
+      t.style.fontSize = (q / 4) + 'pt';
+      return t.scrollWidth <= W + 0.5 && t.offsetHeight <= H + 0.5;
+    }
+    var lo = Math.round(min * 4), hi = Math.round(max * 4);
+    if (ok(hi)) return hi / 4;
+    while (hi - lo > 1) {
+      var mid = (lo + hi) >> 1;
+      if (ok(mid)) lo = mid; else hi = mid;
+    }
+    return lo / 4;
+  }
+  function rawOf(t) { return S.models[t.dataset.model][t.dataset.layer][t.dataset.key] || ''; }
+  // editing: hücre düzenlenirken metne dokunma, sadece puntoyu ayarla
+  function fitOne(t, editing) {
+    var box = t.parentNode, o = S.opts;
+    var max = num(o.maxPt) || 11, min = Math.min(num(o.minPt) || 5, max);
+    var W = box.clientWidth, H = box.clientHeight;
+    if (editing) {
+      t.style.fontSize = bestSize(t, null, W, H, min, max) + 'pt';
+      return;
+    }
+    var raw = rawOf(t);
+    var best = raw, rawS = bestSize(t, raw, W, H, min, max), bestS = rawS;
+    // Heceden bölme son çare: yazı en büyük puntonun %75'inin altına düşüyorsa ve en az 1 punto kazandırıyorsa
+    if (rawS < max * 0.75) {
+      // Aynı puntoda dengeli bölünen kazanır (KARNI-BAHAR, KAR-NIBAHAR değil)
+      var longest = function (str) {
+        return Math.max.apply(null, str.split(/[\s\n]+/).map(function (p) { return p.length; }));
+      };
+      var bestL = Infinity;
+      candidates(raw).forEach(function (c) {
+        var s = bestSize(t, c, W, H, min, max), L = longest(c);
+        if (s > bestS || (s === bestS && L < bestL)) { best = c; bestS = s; bestL = L; }
+      });
+      if (bestS < rawS + 1) { best = raw; bestS = rawS; }
+    }
+    if (t.textContent !== best) t.textContent = best;
+    t.style.fontSize = bestS + 'pt';
+  }
+  function fitAll() {
+    document.querySelectorAll('.cell .t').forEach(function (t) { fitOne(t, t === document.activeElement); });
+  }
+
+  var pagesEl = document.getElementById('pages');
+  var MOBILE = false;  // telefonda tuşa dokununca düzenleme penceresi açılır
+  var PXMM = 96 / 25.4;
+  function render() {
+    kx = 100 / (num(S.opts.calX) || 100);
+    ky = 100 / (num(S.opts.calY) || 100);
+    MOBILE = matchMedia('(max-width: 820px), (pointer: coarse)').matches;
+    document.body.classList.toggle('mobile', MOBILE);
+    pagesEl.innerHTML = '';
+    var list = S.opts.show === 'PB' ? ['P', 'B'] : [S.opts.show];
+    list.forEach(function (k) {
+      var pw = el('div', 'pw');
+      pw.dataset.model = k;
+      pw.appendChild(buildPage(k));
+      pagesEl.appendChild(pw);
+    });
+    fitAll();
+    layoutView();
+    document.querySelectorAll('#showSeg button, #showSegM button').forEach(function (b) {
+      b.classList.toggle('on', b.dataset.v === S.opts.show);
+    });
+  }
+  // Dar ekranda sadece kesilecek kağıt görünür ve ekran genişliğine büyütülür (baskıyı etkilemez)
+  function layoutView() {
+    var narrow = matchMedia('(max-width: 820px)').matches;
+    pagesEl.querySelectorAll('.pw').forEach(function (pw) {
+      var page = pw.firstChild;
+      if (!narrow) {
+        pw.style.width = pw.style.height = page.style.transform = '';
+        return;
+      }
+      var m = S.models[pw.dataset.model], b = m.bleed || 0, M = 6;
+      var x0 = (SX - M) * kx, y0 = (SY - M) * ky;
+      var w = (m.w + 2 * b + 2 * M) * kx, h = (m.h + 2 * b + 2 * M) * ky;
+      var avail = pagesEl.clientWidth, s = avail / (w * PXMM);
+      pw.style.width = avail + 'px';
+      pw.style.height = (h * PXMM * s) + 'px';
+      page.style.transform = 'scale(' + s + ') translate(' + (-x0) + 'mm, ' + (-y0) + 'mm)';
+    });
+  }
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      if (matchMedia('(max-width: 820px), (pointer: coarse)').matches !== MOBILE) render();
+      else layoutView();
+    }, 150);
+  });
+
+  // ---------- Hücre düzenleme ----------
+  pagesEl.addEventListener('input', function (e) {
+    var t = e.target;
+    if (!t.classList.contains('t')) return;
+    S.models[t.dataset.model][t.dataset.layer][t.dataset.key] = t.innerText.replace(/\n+$/, '');
+    save();
+    fitOne(t, true);
+    paintFill(t.closest('.cell').querySelectorAll('.fill')[t.dataset.layer === 'shift' ? 1 : 0]);
+    if (t.dataset.model === bulkModel && t.dataset.layer === bulkLayer) fillBulk();
+  });
+  // Düzenlerken hecelenmemiş asıl metin görünür, çıkınca tekrar hecelenir
+  pagesEl.addEventListener('focusin', function (e) {
+    var t = e.target;
+    if (!t.classList.contains('t')) return;
+    var raw = rawOf(t);
+    if (t.textContent !== raw) {
+      t.textContent = raw;
+      var sel = getSelection(), rng = document.createRange();
+      rng.selectNodeContents(t);
+      rng.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(rng);
+    }
+    fitOne(t, true);
+  });
+  pagesEl.addEventListener('focusout', function (e) {
+    if (e.target.classList.contains('t')) fitOne(e.target, false);
+  });
+  pagesEl.addEventListener('click', function (e) {
+    var cell = e.target.closest('.cell');
+    if (brush || !cell) return;
+    var ts = cell.querySelectorAll('.t'), rc = cell.getBoundingClientRect();
+    var t = ts.length > 1 && e.clientY > rc.top + rc.height / 2 ? ts[1] : ts[0];
+    if (MOBILE) { openSheet(t.dataset.model, t.dataset.key, t.dataset.layer); return; }
+    if (!e.target.classList.contains('t')) t.focus();
+  });
+
+  // ---------- Telefon: tuş düzenleme penceresi ----------
+  var sheet = document.getElementById('sheet');
+  var edN = document.getElementById('edN'), edS = document.getElementById('edS');
+  var cur = null;  // { k: 'P', key: '0-3' }
+  function toInput(s) { return (s || '').replace(/\n/g, ' / '); }
+  function fromInput(v) { return v.trim().split(/\s*\/\s*/).join('\n').replace(/\n+$/, ''); }
+  function sel(k, layer, key) { return '[data-model="' + k + '"][data-layer="' + layer + '"][data-key="' + key + '"]'; }
+  function refreshHalf(k, layer, key) {
+    var t = pagesEl.querySelector('.t' + sel(k, layer, key)), f = pagesEl.querySelector('.fill' + sel(k, layer, key));
+    if (t) fitOne(t, false);
+    if (f) paintFill(f);
+  }
+  function cellEl(k, key) {
+    var t = pagesEl.querySelector('.t' + sel(k, 'names', key));
+    return t && t.closest('.cell');
+  }
+  function buildCatPick(box, layer) {
+    [['auto', 'Otomatik']].concat(CATS.map(function (c) { return [c.id, c.label]; }), [['none', 'Renksiz']]).forEach(function (c) {
+      var b = el('button');
+      b.type = 'button';
+      b.dataset.cat = c[0];
+      var dot = el('i');
+      if (c[0] !== 'auto' && c[0] !== 'none') dot.dataset.color = c[0];
+      b.appendChild(dot);
+      b.appendChild(document.createTextNode(c[1]));
+      b.addEventListener('click', function () {
+        var m = S.models[cur.k], id = layer + ':' + cur.key;
+        if (c[0] === 'auto') delete m.cat[id]; else m.cat[id] = c[0];
+        save();
+        refreshHalf(cur.k, layer, cur.key);
+        syncSheetCats();
+      });
+      box.appendChild(b);
+    });
+  }
+  function syncSheetCats() {
+    [['names', 'catN'], ['shift', 'catS']].forEach(function (p) {
+      var m = S.models[cur.k], ov = m.cat[p[0] + ':' + cur.key] || 'auto';
+      var found = autoCat(m[p[0]][cur.key] || '');
+      document.querySelectorAll('#' + p[1] + ' button').forEach(function (b) {
+        b.classList.toggle('on', b.dataset.cat === ov);
+        var dot = b.firstChild;
+        dot.style.background = dot.dataset.color ? catColor(dot.dataset.color) : (b.dataset.cat === 'auto' && found ? catColor(found) : 'transparent');
+        if (b.dataset.cat === 'auto') b.lastChild.textContent = 'Otomatik' + (found ? ' (' + brushLabel(found) + ')' : '');
+      });
+    });
+  }
+  function openSheet(k, key, layer) {
+    if (cur) { var old = cellEl(cur.k, cur.key); if (old) old.classList.remove('sel'); }
+    cur = { k: k, key: key };
+    var m = S.models[k], rc = key.split('-').map(Number);
+    document.getElementById('sheetTitle').textContent = m.label + ' · ' + (rc[0] + 1) + '. sıra, ' + (rc[1] + 1) + '. tuş';
+    edN.value = toInput(m.names[key]);
+    edS.value = toInput(m.shift[key]);
+    document.getElementById('shiftBox').style.display = S.opts.shift ? '' : 'none';
+    syncSheetCats();
+    var c = cellEl(k, key);
+    if (c) c.classList.add('sel');
+    sheet.classList.add('on');
+    (layer === 'shift' && S.opts.shift ? edS : edN).focus();
+    // Seçili tuş pencerenin altında kalmasın
+    if (c) requestAnimationFrame(function () {
+      var r = c.getBoundingClientRect(), top = sheet.firstElementChild.getBoundingClientRect().top;
+      if (r.bottom > top - 8) window.scrollBy({ top: r.bottom - top + 16, behavior: 'smooth' });
+      else if (r.top < 0) window.scrollBy({ top: r.top - 16, behavior: 'smooth' });
+    });
+  }
+  function closeSheet() {
+    if (!cur) return;
+    var c = cellEl(cur.k, cur.key);
+    if (c) c.classList.remove('sel');
+    cur = null;
+    sheet.classList.remove('on');
+    if (document.activeElement) document.activeElement.blur();
+    fillBulk();
+  }
+  function stepSheet(d) {
+    var m = S.models[cur.k], rc = cur.key.split('-').map(Number), n = m.rows * m.cols;
+    var i = ((rc[0] * m.cols + rc[1] + d) % n + n) % n;
+    openSheet(cur.k, Math.floor(i / m.cols) + '-' + (i % m.cols), 'names');
+  }
+  [[edN, 'names'], [edS, 'shift']].forEach(function (p) {
+    p[0].addEventListener('input', function () {
+      var m = S.models[cur.k], v = fromInput(p[0].value);
+      if (v) m[p[1]][cur.key] = v; else delete m[p[1]][cur.key];
+      save();
+      refreshHalf(cur.k, p[1], cur.key);
+      syncSheetCats();
+    });
+  });
+  edN.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    if (S.opts.shift) edS.focus(); else stepSheet(1);
+  });
+  edS.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    stepSheet(1);
+  });
+  document.getElementById('sheetPrev').addEventListener('click', function () { stepSheet(-1); });
+  document.getElementById('sheetNext').addEventListener('click', function () { stepSheet(1); });
+  document.getElementById('sheetDone').addEventListener('click', closeSheet);
+  document.getElementById('sheetClose').addEventListener('click', closeSheet);
+  sheet.addEventListener('click', function (e) { if (e.target === sheet) closeSheet(); });
+  buildCatPick(document.getElementById('catN'), 'names');
+  buildCatPick(document.getElementById('catS'), 'shift');
+
+  // ---------- Boyama (türü elle düzeltme) ----------
+  var brush = null;
+  var BRUSH_EXTRA = [['auto', 'Otomatik (isme göre)'], ['none', 'Renksiz']];
+  function brushLabel(id) {
+    for (var i = 0; i < CATS.length; i++) if (CATS[i].id === id) return CATS[i].label;
+    for (var j = 0; j < BRUSH_EXTRA.length; j++) if (BRUSH_EXTRA[j][0] === id) return BRUSH_EXTRA[j][1];
+    return id;
+  }
+  function setBrush(id) {
+    brush = brush === id ? null : id;
+    pagesEl.classList.toggle('painting', !!brush);
+    document.querySelectorAll('#catList .chip').forEach(function (c) {
+      c.classList.toggle('on', c.dataset.brush === brush);
+    });
+    document.getElementById('paintBar').classList.toggle('on', !!brush);
+    if (brush) {
+      if (document.activeElement) document.activeElement.blur();
+      document.getElementById('paintMsg').textContent = 'Boyama: ' + brushLabel(brush) + '. Hücrelere tıkla.';
+    }
+  }
+  function buildCatList() {
+    var box = document.getElementById('catList');
+    CATS.concat(BRUSH_EXTRA.map(function (b) { return { id: b[0], label: b[1] }; })).forEach(function (c) {
+      var row = el('div', 'cat-row');
+      if (c.color) {
+        var inp = el('input');
+        inp.type = 'color';
+        inp.dataset.cat = c.id;
+        inp.title = 'Rengi değiştir';
+        row.appendChild(inp);
+      } else {
+        row.appendChild(el('span', 'sw'));
+      }
+      var chip = el('button', 'chip');
+      chip.type = 'button';
+      chip.dataset.brush = c.id;
+      chip.textContent = c.label;
+      chip.addEventListener('click', function () { setBrush(c.id); });
+      row.appendChild(chip);
+      box.appendChild(row);
+    });
+    box.addEventListener('input', function (e) {
+      if (!e.target.dataset.cat) return;
+      S.opts.catColors[e.target.dataset.cat] = e.target.value;
+      save();
+      document.querySelectorAll('.page .fill').forEach(paintFill);
+    });
+  }
+  function fillCatColors() {
+    document.querySelectorAll('#catList input[type=color]').forEach(function (inp) {
+      inp.value = catColor(inp.dataset.cat);
+    });
+  }
+  pagesEl.addEventListener('mousedown', function (e) {
+    if (!brush) return;
+    var cell = e.target.closest('.cell');
+    if (!cell) return;
+    e.preventDefault();
+    var fills = cell.querySelectorAll('.fill'), rc = cell.getBoundingClientRect();
+    var f = fills.length > 1 && e.clientY > rc.top + rc.height / 2 ? fills[1] : fills[0];
+    var m = S.models[f.dataset.model], id = f.dataset.layer + ':' + f.dataset.key;
+    if (brush === 'auto') delete m.cat[id]; else m.cat[id] = brush;
+    save();
+    paintFill(f);
+  });
+  document.getElementById('paintDone').addEventListener('click', function () { setBrush(brush); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && brush) setBrush(brush);
+  });
+
+  // ---------- Ayar alanları ----------
+  function buildDims(k) {
+    var box = document.getElementById('dim' + k);
+    var auto = el('label', 'c');
+    var cb = el('input');
+    cb.type = 'checkbox';
+    cb.dataset.m = k;
+    cb.dataset.f = 'auto';
+    auto.appendChild(cb);
+    auto.appendChild(document.createTextNode(' Hücreyi iç alandan otomatik hesapla'));
+    box.appendChild(auto);
+    var g = el('div', 'grid2');
+    DIM_FIELDS.forEach(function (f) {
+      var lab = el('label', 'f');
+      lab.appendChild(document.createTextNode(f[1]));
+      var inp = el('input');
+      inp.setAttribute('inputmode', 'decimal');
+      inp.dataset.m = k;
+      inp.dataset.f = f[0];
+      lab.appendChild(inp);
+      g.appendChild(lab);
+    });
+    box.appendChild(g);
+    var info = el('p', 'hint');
+    info.id = 'info' + k;
+    box.appendChild(info);
+  }
+  function fillInfo(k) {
+    var m = S.models[k], g = geom(m);
+    var t = 'Hücre ' + fmt(g.cw) + ' × ' + fmt(g.ch) + ' mm. Kesilecek kağıt ' + fmt(m.w + 2 * m.bleed) + ' × ' +
+      fmt(m.h + 2 * m.bleed) + ' mm.';
+    if (!m.auto) {
+      t += ' Izgara ' + fmt(g.gw) + ' × ' + fmt(g.gh) + ' mm, iç alanda boşluk: yanlarda ' + fmt((m.w - g.gw) / 2) +
+        ', üst/altta ' + fmt((m.h - g.gh) / 2) + ' mm.';
+      if (g.gw > m.w + 0.01 || g.gh > m.h + 0.01) t += ' DİKKAT: ızgara iç alandan büyük!';
+    }
+    document.getElementById('info' + k).textContent = t;
+  }
+  function fillInputs() {
+    document.querySelectorAll('input[data-m]').forEach(function (inp) {
+      var m = S.models[inp.dataset.m], f = inp.dataset.f;
+      if (inp.type === 'checkbox') { inp.checked = !!m[f]; return; }
+      var calc = m.auto && (f === 'cw' || f === 'ch');
+      inp.disabled = calc;
+      inp.value = fmt(calc ? geom(m)[f] : m[f]);
+    });
+    document.querySelectorAll('[data-o]').forEach(function (inp) {
+      var v = S.opts[inp.dataset.o];
+      if (inp.type === 'checkbox') inp.checked = !!v;
+      else if (inp.tagName === 'SELECT') inp.value = v;
+      else inp.value = fmt(v);
+    });
+    fillInfo('P');
+    fillInfo('B');
+  }
+  document.querySelector('.ui').addEventListener('change', function (e) {
+    var inp = e.target;
+    if (inp.dataset.m) {
+      var m = S.models[inp.dataset.m], f = inp.dataset.f;
+      if (f === 'auto') {
+        if (!inp.checked) {  // elle moda geçerken hesaplanan değerden başla
+          var g = geom(m);
+          m.cw = Math.round(g.cw * 100) / 100;
+          m.ch = Math.round(g.ch * 100) / 100;
+        }
+        m.auto = inp.checked;
+      } else {
+        var v = num(inp.value);
+        if (isNaN(v)) { fillInputs(); return; }
+        if (f === 'cols' || f === 'rows') v = Math.max(1, Math.round(v));
+        m[f] = v;
+      }
+    } else if (inp.dataset.o) {
+      if (inp.type === 'checkbox') S.opts[inp.dataset.o] = inp.checked;
+      else if (inp.tagName === 'SELECT') S.opts[inp.dataset.o] = inp.value;
+      else {
+        var n = num(inp.value);
+        if (isNaN(n) || n <= 0) { fillInputs(); return; }
+        S.opts[inp.dataset.o] = n;
+      }
+    } else return;
+    save();
+    fillInputs();
+    render();
+    fillBulk();
+  });
+
+  ['showSeg', 'showSegM'].forEach(function (id) {
+    document.getElementById(id).addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b) return;
+      S.opts.show = b.dataset.v;
+      save();
+      render();
+    });
+  });
+  ['printBtn', 'printBtnM'].forEach(function (id) {
+    document.getElementById(id).addEventListener('click', function () {
+      closeSheet();
+      fitAll();
+      window.print();
+    });
+  });
+  window.addEventListener('beforeprint', fitAll);
+  document.getElementById('resetDims').addEventListener('click', function () {
+    if (!confirm('Kağıt/hücre ölçüleri ve kalibrasyon varsayılana dönsün mü? (İsimler ve renkler silinmez.)')) return;
+    ['P', 'B'].forEach(function (k) {
+      var old = S.models[k];
+      S.models[k] = copy(DEF_MODELS[k]);
+      S.models[k].names = old.names;
+      S.models[k].shift = old.shift;
+      S.models[k].cat = old.cat;
+    });
+    S.opts.calX = 100;
+    S.opts.calY = 100;
+    save();
+    fillInputs();
+    render();
+  });
+
+  // ---------- Toplu liste ----------
+  var bulkText = document.getElementById('bulkText');
+  function fillBulk() {
+    var m = S.models[bulkModel], map = m[bulkLayer], out = [];
+    for (var r = 0; r < m.rows; r++) {
+      out.push('# ' + (r + 1) + '. sıra' + (bulkLayer === 'shift' ? ' (shift)' : ''));
+      for (var c = 0; c < m.cols; c++) out.push((map[r + '-' + c] || '').replace(/\n/g, ' / '));
+    }
+    bulkText.value = out.join('\n');
+    document.querySelectorAll('#bulkSeg button').forEach(function (b) {
+      b.classList.toggle('on', b.dataset.v === bulkModel);
+    });
+    document.querySelectorAll('#layerSeg button').forEach(function (b) {
+      b.classList.toggle('on', b.dataset.v === bulkLayer);
+    });
+  }
+  function parseBulk() {
+    var m = S.models[bulkModel], names = {}, i = 0;
+    bulkText.value.split(/\r?\n/).forEach(function (line) {
+      if (/^\s*#/.test(line)) return;
+      var r = Math.floor(i / m.cols), c = i % m.cols;
+      var v = line.trim().split(/\s*\/\s*/).join('\n');
+      if (v) names[r + '-' + c] = v;
+      i++;
+    });
+    return names;
+  }
+  document.getElementById('bulkSeg').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    bulkModel = b.dataset.v;
+    fillBulk();
+  });
+  document.getElementById('layerSeg').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    bulkLayer = b.dataset.v;
+    fillBulk();
+  });
+  document.getElementById('bulkApply').addEventListener('click', function () {
+    S.models[bulkModel][bulkLayer] = parseBulk();
+    save();
+    render();
+    fillBulk();
+  });
+  document.getElementById('bulkCopy').addEventListener('click', function () {
+    var other = bulkModel === 'P' ? 'B' : 'P';
+    var layerName = bulkLayer === 'shift' ? 'shift' : 'normal';
+    if (!confirm(S.models[bulkModel].label + ' ' + layerName + ' listesi ' + S.models[other].label + ' üzerine yazılsın mı?')) return;
+    S.models[bulkModel][bulkLayer] = parseBulk();
+    S.models[other][bulkLayer] = copy(S.models[bulkModel][bulkLayer]);
+    save();
+    render();
+  });
+
+  buildDims('P');
+  buildDims('B');
+  buildCatList();
+  fillCatColors();
+  fillInputs();
+  render();
+  fillBulk();
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(fitAll);
+    document.fonts.addEventListener('loadingdone', fitAll);  // internet fontu sonradan gelirse yeniden sığdır
+  }
+
+  // ---------- Cihazlar arası aktarım (tüm durum linkin # kısmında, sunucuya gitmez) ----------
+  var HOSTED_URL = 'https://mhertan.github.io/terazi-tus-kagidi/';  // GitHub Pages (index.html = bu dosya)
+  function b64u(bytes) {
+    var s = '';
+    for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function unb64u(str) {
+    str = str.replace(/-/g, '+').replace(/_/g, '/');
+    while (str.length % 4) str += '=';
+    var s = atob(str), a = new Uint8Array(s.length);
+    for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i);
+    return a;
+  }
+  function pipe(bytes, stream) {
+    return new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer().then(function (b) {
+      return new Uint8Array(b);
+    });
+  }
+  function packState() {
+    var json = new TextEncoder().encode(JSON.stringify({ v: 1, opts: S.opts, models: S.models }));
+    if (window.CompressionStream) return pipe(json, new CompressionStream('deflate-raw')).then(function (b) { return 'z' + b64u(b); });
+    return Promise.resolve('j' + b64u(json));
+  }
+  function unpackState(str) {
+    var bytes = unb64u(str.slice(1));
+    var p = str[0] === 'z' ? pipe(bytes, new DecompressionStream('deflate-raw')) : Promise.resolve(bytes);
+    return p.then(function (b) { return JSON.parse(new TextDecoder().decode(b)); });
+  }
+  function applyState(s) {
+    var show = S.opts.show;
+    Object.assign(S.opts, s.opts || {});
+    S.opts.show = show;
+    ['P', 'B'].forEach(function (k) { if (s.models && s.models[k]) Object.assign(S.models[k], s.models[k]); });
+    save();
+    fillInputs();
+    fillCatColors();
+    render();
+    fillBulk();
+  }
+  document.getElementById('xferBtn').addEventListener('click', function () {
+    var msg = document.getElementById('xferMsg'), out = document.getElementById('xferOut');
+    var base = /^https?:$/.test(location.protocol) ? location.origin + location.pathname : HOSTED_URL;
+    if (!base) {
+      msg.textContent = 'Link için sayfanın internet adresi lazım; bu dosya henüz yayında değil.';
+      return;
+    }
+    packState().then(function (d) {
+      var url = base + '#d=' + d;
+      out.style.display = '';
+      out.value = url;
+      out.select();
+      if (MOBILE && navigator.share) {
+        navigator.share({ title: 'Terazi tuş kağıdı', url: url }).catch(function () {});
+        msg.textContent = 'Paylaş menüsünden WhatsApp\'ı seç. Menü açılmadıysa yukarıdaki linki kopyala.';
+      } else {
+        var done = function () { msg.textContent = 'Link kopyalandı. WhatsApp\'ta kendine yapıştırıp gönder, telefonda aç.'; };
+        if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, function () { document.execCommand('copy'); done(); });
+        else { document.execCommand('copy'); done(); }
+      }
+    });
+  });
+  var hm = location.hash.match(/^#d=(.+)$/);
+  if (hm) {
+    unpackState(hm[1]).then(function (s) {
+      history.replaceState(null, '', location.pathname + location.search);
+      if (confirm('Linkteki isimler, renkler ve ölçüler bu cihaza yüklensin mi? Buradaki mevcut isimlerin yerine geçer.')) applyState(s);
+    }).catch(function () {
+      alert('Aktarım linki okunamadı. Link eksik kopyalanmış olabilir.');
+    });
+  }
+})();
+</script>
+</body>
+</html>
