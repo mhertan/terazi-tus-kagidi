@@ -71,9 +71,8 @@
   .wrow span { font-weight: 600; overflow-wrap: anywhere; }
   .wrow small { color: var(--mute); font-weight: 400; }
   .wrow .btn.small { margin: 0; }
-  #ghBox { border-top: 0; margin-top: 0; padding-top: 2px; }
-  #ghBox summary { font-weight: 400; font-size: 13px; color: var(--mute); }
-  #ghBox a { color: var(--acc); }
+  #pinBox[hidden], #pinState[hidden] { display: none; }
+  #pinState a { color: var(--acc); }
   .howto { background: var(--soft); border-radius: 8px; padding: 10px 12px 10px 28px; margin: 12px 0 0; font-size: 13px; }
   .howto li { margin: 3px 0; }
   details { border-top: 1px solid var(--line); padding: 8px 0; margin-top: 8px; }
@@ -237,18 +236,13 @@
     <button class="btn small" id="webSaveBtn" type="button">☁ Web'e kaydet</button>
     <button class="btn small" id="webListBtn" type="button">Web'den aç</button>
   </div>
+  <div class="prow" id="pinBox" hidden>
+    <input id="pinInp" type="password" inputmode="numeric" autocomplete="off" placeholder="Kayıt şifresi" aria-label="Kayıt şifresi">
+    <button class="btn small" id="pinOk" type="button">Tamam</button>
+  </div>
   <p class="hint" id="webMsg"></p>
   <div id="webList"></div>
-  <details id="ghBox"><summary>Web kaydı anahtarı (GitHub)</summary>
-    <p class="hint">Sadece web'e <b>kaydetmek</b> için gerekir, açmak için gerekmez. Anahtar yalnızca bu cihazda durur, linklere eklenmez.</p>
-    <p class="hint" id="ghState"></p>
-    <div class="prow">
-      <input id="ghTok" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" aria-label="GitHub anahtarı">
-      <button class="btn small" id="ghSave" type="button">Kaydet</button>
-    </div>
-    <button class="btn small" id="ghDel" type="button">Anahtarı bu cihazdan sil</button>
-    <p class="hint"><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Anahtar oluştur</a>: Repository access → Only select repositories → <b>terazi-duzenler</b>; Permissions → Contents → <b>Read and write</b>.</p>
-  </details>
+  <p class="hint" id="pinState" hidden>Bu cihaz kayıt şifresini hatırlıyor. <a href="#" id="pinForget">Unut</a></p>
 
   <h2 id="showHead">Yazdırılacak</h2>
   <div class="seg" id="showSeg">
@@ -1456,72 +1450,81 @@
   });
   fillProfiles();
 
-  // ---------- Web kaydı: düzenler ayrı bir açık GitHub deposunda JSON dosyası olarak durur ----------
-  // Okumak anahtarsız; yazmak için bu cihaza girilen, sadece o depoya yetkili anahtar gerekir
-  var GH_REPO = 'mhertan/terazi-duzenler', GH_DIR = 'duzenler', TKEY = 'terazi-gh-anahtar';
-  function ghToken() {
-    try { return localStorage.getItem(TKEY) || ''; } catch (e) { return ''; }
+  // ---------- Web kaydı: düzenler sunucudaki SQLite veritabanında, isimleriyle ----------
+  // Açmak serbest; kaydetmek/silmek için kayıt şifresi (sunucudaki TERAZI_PIN) gerekir, cihaz hatırlar
+  var SERVER_URL = 'https://terazi.mhertan.tr', PINKEY = 'terazi-kayit-sifresi';
+  function apiBase() {
+    // Sayfa sunucunun kendisinden açıldıysa aynı adres; GitHub kopyası ya da dosyadan açıldıysa sunucu adresi
+    return /^https?:$/.test(location.protocol) && location.hostname !== 'mhertan.github.io' ? '' : SERVER_URL;
   }
-  function ghFetch(path, o) {
+  function getPin() {
+    try { return localStorage.getItem(PINKEY) || ''; } catch (e) { return ''; }
+  }
+  function api(path, o) {
     o = o || {};
-    var h = { Accept: o.raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json' };
-    var tk = ghToken();
-    if (tk) h.Authorization = 'Bearer ' + tk;
+    var h = {};
     if (o.body) h['Content-Type'] = 'application/json';
-    return fetch('https://api.github.com/repos/' + GH_REPO + '/contents/' + path,
-      { method: o.method || 'GET', headers: h, body: o.body, cache: 'no-store' });
-  }
-  function fileOf(name) { return GH_DIR + '/' + encodeURIComponent(name.replace(/[\/\\]/g, '-') + '.json'); }
-  function utf8b64(str) {
-    var bytes = new TextEncoder().encode(str), s = '';
-    for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
-    return btoa(s);
+    if (o.pin) h['X-Pin'] = o.pin;
+    return fetch(apiBase() + '/api/' + path, { method: o.method || 'GET', headers: h, body: o.body, cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw r; return r; });
   }
   function webMsg(t) { document.getElementById('webMsg').textContent = t; }
+  var afterPin = null;  // şifre girilince yapılacak iş (kaydet / sil)
+  function askPin(next, msg) {
+    afterPin = next;
+    document.getElementById('pinBox').hidden = false;
+    webMsg(msg || 'Kayıt şifresini gir (bu cihaz hatırlar).');
+    document.getElementById('pinInp').focus();
+  }
   function webFail(e) {
-    if (!e || !e.status) { webMsg('GitHub\'a ulaşılamadı. İnternet bağlantısını kontrol et.'); return; }
-    if (e.status === 401) webMsg('Anahtar geçersiz ya da süresi dolmuş. Aşağıdan yenisini gir.');
-    else if (e.status === 403 && e.headers.get('x-ratelimit-remaining') === '0') webMsg('GitHub saatlik sınırı doldu, biraz sonra tekrar dene.');
-    else if (e.status === 403) webMsg('Anahtarın terazi-duzenler deposuna yazma yetkisi yok (Contents: Read and write).');
+    if (!e || !e.status) { webMsg('Sunucuya ulaşılamadı. İnternet bağlantısını kontrol et.'); return; }
+    if (e.status === 401) {
+      try { localStorage.removeItem(PINKEY); } catch (x) { /* sorun değil */ }
+      fillPin();
+      webMsg('Kayıt şifresi yanlış.');
+    } else if (e.status === 429) webMsg('Çok fazla deneme yapıldı, bir dakika bekleyip tekrar dene.');
+    else if (e.status === 503) webMsg('Sunucuda kayıt şifresi ayarlanmamış.');
     else if (e.status === 404) webMsg('Web\'de bulunamadı.');
-    else if (e.status === 409 || e.status === 422) webMsg('Aynı anda başka bir kayıt yapıldı, tekrar dene.');
-    else webMsg('GitHub hatası: ' + e.status);
+    else webMsg('Sunucu hatası: ' + e.status);
+  }
+  function fmtTime(iso) {
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    var p = function (n) { return ('0' + n).slice(-2); };
+    return p(d.getDate()) + '.' + p(d.getMonth() + 1) + '.' + d.getFullYear() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
   function webList() {
     var box = document.getElementById('webList');
     webMsg('Web\'deki düzenler alınıyor…');
-    ghFetch(GH_DIR).then(function (r) {
-      if (r.status === 404) return [];
-      if (!r.ok) throw r;
-      return r.json();
-    }).then(function (items) {
+    api('duzenler').then(function (r) { return r.json(); }).then(function (items) {
       box.innerHTML = '';
-      var files = items.filter(function (f) { return f.type === 'file' && /\.json$/i.test(f.name); });
-      webMsg(files.length ? 'Web\'deki düzenler:' : 'Web\'de kayıtlı düzen yok.');
-      files.forEach(function (f) {
-        var name = f.name.replace(/\.json$/i, '');
-        var row = el('div', 'wrow'), label = el('span'), b = el('button', 'btn small');
-        label.textContent = name;
-        if (name === PR.active) {
-          var note = el('small');
-          note.textContent = '  (şu an açık)';
-          label.appendChild(note);
-        }
-        b.type = 'button';
-        b.textContent = 'Aç';
-        b.addEventListener('click', function () { webOpen(name); });
+      webMsg(items.length ? 'Web\'deki düzenler:' : 'Web\'de kayıtlı düzen yok.');
+      items.forEach(function (it) {
+        var row = el('div', 'wrow'), label = el('span'), when = el('small');
+        label.textContent = it.ad;
+        when.textContent = '  ' + fmtTime(it.guncelleme) + (it.ad === PR.active ? ' · şu an açık' : '');
+        label.appendChild(when);
+        var open = el('button', 'btn small'), del = el('button', 'btn small');
+        open.type = del.type = 'button';
+        open.textContent = 'Aç';
+        del.textContent = 'Sil';
+        open.addEventListener('click', function () { webOpen(it.ad); });
+        del.addEventListener('click', function () {
+          if (confirm('"' + it.ad + '" web\'den silinsin mi? Cihazlardaki kopyalar kalır.')) webDelete(it.ad);
+        });
+        var btns = el('div', 'prow');
+        btns.style.marginTop = '0';
+        btns.appendChild(open);
+        btns.appendChild(del);
         row.appendChild(label);
-        row.appendChild(b);
+        row.appendChild(btns);
         box.appendChild(row);
       });
     }).catch(webFail);
   }
   function webOpen(name) {
     webMsg('"' + name + '" açılıyor…');
-    ghFetch(fileOf(name), { raw: true }).then(function (r) {
-      if (!r.ok) throw r;
-      return r.json();
-    }).then(function (s) {
+    api('duzenler/' + encodeURIComponent(name)).then(function (r) { return r.json(); }).then(function (s) {
       s.name = name;
       var exists = name === PR.active || !!PR.others[name];
       if (exists && !confirm('Bu cihazdaki "' + name + '" düzeni web\'deki haliyle değiştirilsin mi?')) { webMsg(''); return; }
@@ -1531,48 +1534,58 @@
     }).catch(webFail);
   }
   function webSave() {
-    if (!ghToken()) {
-      webMsg('Web\'e kaydetmek için önce aşağıdaki "Web kaydı anahtarı" kutusuna GitHub anahtarını gir.');
-      document.getElementById('ghBox').open = true;
-      return;
-    }
-    var name = PR.active, path = fileOf(name);
+    var pin = getPin();
+    if (!pin) { askPin(webSave); return; }
+    var name = PR.active;
     webMsg('"' + name + '" kaydediliyor…');
-    ghFetch(path).then(function (r) {
-      if (r.status === 404) return null;
-      if (!r.ok) throw r;
-      return r.json();
-    }).then(function (cur) {
-      var doc = JSON.stringify({ v: 1, name: name, savedAt: new Date().toISOString(), opts: S.opts, models: S.models }, null, 1);
-      var body = { message: name + ' düzeni kaydedildi', content: utf8b64(doc) };
-      if (cur) body.sha = cur.sha;
-      return ghFetch(path, { method: 'PUT', body: JSON.stringify(body) });
-    }).then(function (r) {
-      if (!r.ok) throw r;
+    var doc = JSON.stringify({ v: 1, name: name, opts: S.opts, models: S.models });
+    api('duzenler/' + encodeURIComponent(name), { method: 'PUT', body: doc, pin: pin }).then(function () {
       var t = new Date();
       webMsg('"' + name + '" web\'e kaydedildi (' + ('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2) + ').');
       document.getElementById('webList').innerHTML = '';
+    }).catch(function (e) {
+      webFail(e);
+      if (e && e.status === 401) askPin(webSave, 'Kayıt şifresi yanlış, tekrar gir.');
+    });
+  }
+  function webDelete(name) {
+    var pin = getPin();
+    if (!pin) { askPin(function () { webDelete(name); }); return; }
+    api('duzenler/' + encodeURIComponent(name), { method: 'DELETE', pin: pin }).then(function () {
+      webMsg('"' + name + '" web\'den silindi.');
+      webList();
     }).catch(webFail);
   }
-  function fillGh() {
-    var tk = ghToken();
-    document.getElementById('ghState').textContent = tk ? 'Bu cihazda anahtar kayıtlı (…' + tk.slice(-4) + ').' : 'Bu cihazda anahtar yok.';
-    document.getElementById('ghDel').style.display = tk ? '' : 'none';
+  function fillPin() {
+    document.getElementById('pinState').hidden = !getPin();
   }
   document.getElementById('webSaveBtn').addEventListener('click', webSave);
   document.getElementById('webListBtn').addEventListener('click', webList);
-  document.getElementById('ghSave').addEventListener('click', function () {
-    var inp = document.getElementById('ghTok'), v = inp.value.trim();
+  function submitPin() {
+    var inp = document.getElementById('pinInp'), v = inp.value.trim();
     if (!v) return;
-    try { localStorage.setItem(TKEY, v); } catch (e) { webMsg('Bu tarayıcı anahtarı saklamaya izin vermiyor.'); }
-    inp.value = '';
-    fillGh();
+    // Önce sunucuda doğrula, doğruysa hatırla ve bekleyen işi yap
+    api('pin', { method: 'POST', pin: v }).then(function () {
+      try { localStorage.setItem(PINKEY, v); } catch (e) { /* hatırlayamazsa her seferinde sorulur */ }
+      inp.value = '';
+      document.getElementById('pinBox').hidden = true;
+      fillPin();
+      var next = afterPin;
+      afterPin = null;
+      if (next) next();
+    }).catch(function (e) {
+      if (e && e.status === 401) { webMsg('Kayıt şifresi yanlış.'); inp.select(); } else webFail(e);
+    });
+  }
+  document.getElementById('pinOk').addEventListener('click', submitPin);
+  document.getElementById('pinInp').addEventListener('keydown', function (e) { if (e.key === 'Enter') submitPin(); });
+  document.getElementById('pinForget').addEventListener('click', function (e) {
+    e.preventDefault();
+    try { localStorage.removeItem(PINKEY); } catch (x) { /* sorun değil */ }
+    fillPin();
+    webMsg('Kayıt şifresi bu cihazdan silindi.');
   });
-  document.getElementById('ghDel').addEventListener('click', function () {
-    try { localStorage.removeItem(TKEY); } catch (e) { /* sorun değil */ }
-    fillGh();
-  });
-  fillGh();
+  fillPin();
 })();
 </script>
 </body>

@@ -1,0 +1,7 @@
+**/bin/
+**/obj/
+**/*.db*
+.git/
+Market 2/
+*.pdf
+*.bat

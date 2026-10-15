@@ -1,3 +1,8 @@
 # Sadece bu bilgisayarda işe yarar, internete gerek yok
 *.bat
 Market 2/
+# Sunucu derleme çıktıları ve yerel veritabanı
+sunucu/bin/
+sunucu/obj/
+*.db
+*.db-*
