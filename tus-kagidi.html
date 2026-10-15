@@ -66,6 +66,14 @@
     border: 1px solid var(--line); border-radius: 6px;
   }
   .prow .btn.small { margin: 0; }
+  #webMsg:empty { display: none; }
+  .wrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .wrow span { font-weight: 600; overflow-wrap: anywhere; }
+  .wrow small { color: var(--mute); font-weight: 400; }
+  .wrow .btn.small { margin: 0; }
+  #ghBox { border-top: 0; margin-top: 0; padding-top: 2px; }
+  #ghBox summary { font-weight: 400; font-size: 13px; color: var(--mute); }
+  #ghBox a { color: var(--acc); }
   .howto { background: var(--soft); border-radius: 8px; padding: 10px 12px 10px 28px; margin: 12px 0 0; font-size: 13px; }
   .howto li { margin: 3px 0; }
   details { border-top: 1px solid var(--line); padding: 8px 0; margin-top: 8px; }
@@ -113,8 +121,8 @@
   .cell .pl { display: flex; align-items: center; justify-content: center; }
   .cell .p {
     position: static; display: block; width: 100%; text-align: center; color: #000; white-space: nowrap; outline: none;
-    font-family: Bahnschrift, "Roboto Condensed", "Arial Narrow", Arial, sans-serif; font-stretch: 75%; font-weight: 400;
-    letter-spacing: .03em;
+    font-family: Bahnschrift, "Roboto Condensed", "Arial Narrow", Arial, sans-serif; font-stretch: 75%; font-weight: 600;
+    letter-spacing: .04em;
   }
   .mobile .cell .p { pointer-events: none; }
   .cell:hover .t:not(:focus) { background: #f1f6ff; }
@@ -225,6 +233,22 @@
     <button class="btn small" id="profNew" type="button">+ Yeni</button>
     <button class="btn small" id="profDel" type="button">Sil</button>
   </div>
+  <div class="prow">
+    <button class="btn small" id="webSaveBtn" type="button">☁ Web'e kaydet</button>
+    <button class="btn small" id="webListBtn" type="button">Web'den aç</button>
+  </div>
+  <p class="hint" id="webMsg"></p>
+  <div id="webList"></div>
+  <details id="ghBox"><summary>Web kaydı anahtarı (GitHub)</summary>
+    <p class="hint">Sadece web'e <b>kaydetmek</b> için gerekir, açmak için gerekmez. Anahtar yalnızca bu cihazda durur, linklere eklenmez.</p>
+    <p class="hint" id="ghState"></p>
+    <div class="prow">
+      <input id="ghTok" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" aria-label="GitHub anahtarı">
+      <button class="btn small" id="ghSave" type="button">Kaydet</button>
+    </div>
+    <button class="btn small" id="ghDel" type="button">Anahtarı bu cihazdan sil</button>
+    <p class="hint"><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Anahtar oluştur</a>: Repository access → Only select repositories → <b>terazi-duzenler</b>; Permissions → Contents → <b>Read and write</b>.</p>
+  </details>
 
   <h2 id="showHead">Yazdırılacak</h2>
   <div class="seg" id="showSeg">
@@ -283,6 +307,7 @@
         </select>
       </label>
       <label class="f">Çizgi kalınlığı (mm)<input data-o="lineW" inputmode="decimal"></label>
+      <label class="f">PLU kodu punto<input data-o="pluPt" inputmode="decimal"></label>
     </div>
     <label class="c"><input type="checkbox" data-o="upper"> Hepsi büyük harf</label>
     <label class="c"><input type="checkbox" data-o="hyph"> Uzun kelimeyi heceden böl (SALA-TALIK)</label>
@@ -383,7 +408,7 @@
   var DEF_OPTS = {
     show: 'P', calX: 100, calY: 100, font: 'bahn', maxPt: 11, minPt: 5, lineW: 0.2, lines: 'box',
     shift: true, upper: true, hyph: true, frame: true, crop: true, nums: false, rulers: true,
-    colors: true, catColors: {}, pluShow: false
+    colors: true, catColors: {}, pluShow: false, pluPt: 10
   };
 
   // Hücre renkleri: açık tonlar, üstündeki siyah yazı rahat okunsun
@@ -614,7 +639,9 @@
         var layers = o.shift ? ['names', 'shift'] : ['names'];
         var lh = o.shift ? (ih - SPLIT) / 2 : ih;
         // PLU kodu ismin üstünde ayrı bir şeritte, sabit puntoda
-        var plh = o.pluShow ? (o.shift ? 2.6 : 3.4) : 0;
+        // Şerit yüksekliği puntoya göre (1 pt = 0,353 mm); shift'te yarım hücreye sığsın diye küçültülür
+        var plPt = (num(o.pluPt) || 10) * (o.shift ? 0.7 : 1);
+        var plh = o.pluShow ? plPt * 0.353 * 1.1 + 0.3 : 0;
         for (var li = 0; li < layers.length; li++) {
           // Zemin rengi hücrenin (shift'te yarısının) tamamını kaplar, çerçeve üstüne çizilir
           var fh = g.ch * ky / layers.length;
@@ -633,7 +660,7 @@
             p.dataset.layer = layers[li];
             p.dataset.key = key;
             p.textContent = m.plu[layers[li] + ':' + key] || '';
-            p.style.fontSize = (o.shift ? 6 : 7.5) + 'pt';
+            p.style.fontSize = plPt + 'pt';
             p.style.lineHeight = plh * ky + 'mm';
             pbox.appendChild(p);
             cell.appendChild(pbox);
@@ -1428,6 +1455,124 @@
     refreshAll();
   });
   fillProfiles();
+
+  // ---------- Web kaydı: düzenler ayrı bir açık GitHub deposunda JSON dosyası olarak durur ----------
+  // Okumak anahtarsız; yazmak için bu cihaza girilen, sadece o depoya yetkili anahtar gerekir
+  var GH_REPO = 'mhertan/terazi-duzenler', GH_DIR = 'duzenler', TKEY = 'terazi-gh-anahtar';
+  function ghToken() {
+    try { return localStorage.getItem(TKEY) || ''; } catch (e) { return ''; }
+  }
+  function ghFetch(path, o) {
+    o = o || {};
+    var h = { Accept: o.raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json' };
+    var tk = ghToken();
+    if (tk) h.Authorization = 'Bearer ' + tk;
+    if (o.body) h['Content-Type'] = 'application/json';
+    return fetch('https://api.github.com/repos/' + GH_REPO + '/contents/' + path,
+      { method: o.method || 'GET', headers: h, body: o.body, cache: 'no-store' });
+  }
+  function fileOf(name) { return GH_DIR + '/' + encodeURIComponent(name.replace(/[\/\\]/g, '-') + '.json'); }
+  function utf8b64(str) {
+    var bytes = new TextEncoder().encode(str), s = '';
+    for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s);
+  }
+  function webMsg(t) { document.getElementById('webMsg').textContent = t; }
+  function webFail(e) {
+    if (!e || !e.status) { webMsg('GitHub\'a ulaşılamadı. İnternet bağlantısını kontrol et.'); return; }
+    if (e.status === 401) webMsg('Anahtar geçersiz ya da süresi dolmuş. Aşağıdan yenisini gir.');
+    else if (e.status === 403 && e.headers.get('x-ratelimit-remaining') === '0') webMsg('GitHub saatlik sınırı doldu, biraz sonra tekrar dene.');
+    else if (e.status === 403) webMsg('Anahtarın terazi-duzenler deposuna yazma yetkisi yok (Contents: Read and write).');
+    else if (e.status === 404) webMsg('Web\'de bulunamadı.');
+    else if (e.status === 409 || e.status === 422) webMsg('Aynı anda başka bir kayıt yapıldı, tekrar dene.');
+    else webMsg('GitHub hatası: ' + e.status);
+  }
+  function webList() {
+    var box = document.getElementById('webList');
+    webMsg('Web\'deki düzenler alınıyor…');
+    ghFetch(GH_DIR).then(function (r) {
+      if (r.status === 404) return [];
+      if (!r.ok) throw r;
+      return r.json();
+    }).then(function (items) {
+      box.innerHTML = '';
+      var files = items.filter(function (f) { return f.type === 'file' && /\.json$/i.test(f.name); });
+      webMsg(files.length ? 'Web\'deki düzenler:' : 'Web\'de kayıtlı düzen yok.');
+      files.forEach(function (f) {
+        var name = f.name.replace(/\.json$/i, '');
+        var row = el('div', 'wrow'), label = el('span'), b = el('button', 'btn small');
+        label.textContent = name;
+        if (name === PR.active) {
+          var note = el('small');
+          note.textContent = '  (şu an açık)';
+          label.appendChild(note);
+        }
+        b.type = 'button';
+        b.textContent = 'Aç';
+        b.addEventListener('click', function () { webOpen(name); });
+        row.appendChild(label);
+        row.appendChild(b);
+        box.appendChild(row);
+      });
+    }).catch(webFail);
+  }
+  function webOpen(name) {
+    webMsg('"' + name + '" açılıyor…');
+    ghFetch(fileOf(name), { raw: true }).then(function (r) {
+      if (!r.ok) throw r;
+      return r.json();
+    }).then(function (s) {
+      s.name = name;
+      var exists = name === PR.active || !!PR.others[name];
+      if (exists && !confirm('Bu cihazdaki "' + name + '" düzeni web\'deki haliyle değiştirilsin mi?')) { webMsg(''); return; }
+      importState(s);
+      document.getElementById('webList').innerHTML = '';
+      webMsg('"' + name + '" web\'den açıldı.');
+    }).catch(webFail);
+  }
+  function webSave() {
+    if (!ghToken()) {
+      webMsg('Web\'e kaydetmek için önce aşağıdaki "Web kaydı anahtarı" kutusuna GitHub anahtarını gir.');
+      document.getElementById('ghBox').open = true;
+      return;
+    }
+    var name = PR.active, path = fileOf(name);
+    webMsg('"' + name + '" kaydediliyor…');
+    ghFetch(path).then(function (r) {
+      if (r.status === 404) return null;
+      if (!r.ok) throw r;
+      return r.json();
+    }).then(function (cur) {
+      var doc = JSON.stringify({ v: 1, name: name, savedAt: new Date().toISOString(), opts: S.opts, models: S.models }, null, 1);
+      var body = { message: name + ' düzeni kaydedildi', content: utf8b64(doc) };
+      if (cur) body.sha = cur.sha;
+      return ghFetch(path, { method: 'PUT', body: JSON.stringify(body) });
+    }).then(function (r) {
+      if (!r.ok) throw r;
+      var t = new Date();
+      webMsg('"' + name + '" web\'e kaydedildi (' + ('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2) + ').');
+      document.getElementById('webList').innerHTML = '';
+    }).catch(webFail);
+  }
+  function fillGh() {
+    var tk = ghToken();
+    document.getElementById('ghState').textContent = tk ? 'Bu cihazda anahtar kayıtlı (…' + tk.slice(-4) + ').' : 'Bu cihazda anahtar yok.';
+    document.getElementById('ghDel').style.display = tk ? '' : 'none';
+  }
+  document.getElementById('webSaveBtn').addEventListener('click', webSave);
+  document.getElementById('webListBtn').addEventListener('click', webList);
+  document.getElementById('ghSave').addEventListener('click', function () {
+    var inp = document.getElementById('ghTok'), v = inp.value.trim();
+    if (!v) return;
+    try { localStorage.setItem(TKEY, v); } catch (e) { webMsg('Bu tarayıcı anahtarı saklamaya izin vermiyor.'); }
+    inp.value = '';
+    fillGh();
+  });
+  document.getElementById('ghDel').addEventListener('click', function () {
+    try { localStorage.removeItem(TKEY); } catch (e) { /* sorun değil */ }
+    fillGh();
+  });
+  fillGh();
 })();
 </script>
 </body>
