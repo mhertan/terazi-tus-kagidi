@@ -56,6 +56,16 @@
   }
   .btn.primary { background: var(--acc); color: var(--acc-ink); border-color: var(--acc); font-size: 15px; }
   .btn.small { display: inline-block; width: auto; padding: 6px 10px; margin: 6px 6px 0 0; font-size: 13px; }
+  .psel {
+    width: 100%; padding: 8px 10px; font: inherit; font-weight: 600; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 8px;
+  }
+  .prow { display: flex; gap: 6px; margin-top: 6px; align-items: center; }
+  .prow input {
+    flex: 1; min-width: 0; padding: 6px 8px; font: inherit; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 6px;
+  }
+  .prow .btn.small { margin: 0; }
   .howto { background: var(--soft); border-radius: 8px; padding: 10px 12px 10px 28px; margin: 12px 0 0; font-size: 13px; }
   .howto li { margin: 3px 0; }
   details { border-top: 1px solid var(--line); padding: 8px 0; margin-top: 8px; }
@@ -99,7 +109,14 @@
     white-space: pre-wrap; overflow-wrap: normal; word-break: normal; hyphens: none;
     line-height: 1.06; outline: none;
   }
-  .cell .t:focus { background: #fff6c8; }
+  .cell .t:focus, .cell .p:focus { background: #fff6c8; }
+  .cell .pl { display: flex; align-items: center; justify-content: center; }
+  .cell .p {
+    position: static; display: block; width: 100%; text-align: center; color: #000; white-space: nowrap; outline: none;
+    font-family: Bahnschrift, "Roboto Condensed", "Arial Narrow", Arial, sans-serif; font-stretch: 75%; font-weight: 400;
+    letter-spacing: .03em;
+  }
+  .mobile .cell .p { pointer-events: none; }
   .cell:hover .t:not(:focus) { background: #f1f6ff; }
   .cell .num { font: 4.5pt Arial, sans-serif; color: #888; }
   .up .t { text-transform: uppercase; }
@@ -144,7 +161,7 @@
   @media (max-width: 820px) {
     body { display: flex; flex-direction: column; }
     .ui { order: 2; height: auto; position: static; border-right: 0; border-top: 1px solid var(--line); padding: 14px 14px 40px; }
-    .ui > h1, .ui > .sub, .ui > h2, #showSeg, #printBtn { display: none; }
+    .ui > h1, .ui > .sub, #showHead, #showSeg, #printBtn, #profSel { display: none; }
     main { padding: 10px 8px 4px; overflow: visible; }
     .mbar { display: block; margin: 0 0 10px; }
     .mbar .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
@@ -166,6 +183,9 @@
   .sheet-head button { border: 0; background: none; font-size: 22px; line-height: 1; padding: 4px 8px; cursor: pointer; color: var(--mute); }
   .sheet label.f { margin-top: 10px; font-size: 13px; }
   .sheet label.f input { font-size: 17px; padding: 10px; }
+  .edrow { display: flex; gap: 8px; }
+  .edrow label.f { flex: 1; min-width: 0; }
+  .edrow label.plu-f { flex: none; width: 92px; }
   .catpick { display: flex; gap: 6px; margin-top: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
   .catpick::-webkit-scrollbar { display: none; }
   .catpick button {
@@ -198,13 +218,22 @@
   <h1>Terazi Tuş Kağıdı</h1>
   <p class="sub">CAS CL3000 hızlı tuş şablonu · milimetrik baskı</p>
 
-  <h2>Yazdırılacak</h2>
+  <h2>Düzen (market)</h2>
+  <select id="profSel" class="psel" aria-label="Düzen seç"></select>
+  <div class="prow">
+    <input id="profName" aria-label="Bu düzenin adı" placeholder="Düzenin adı">
+    <button class="btn small" id="profNew" type="button">+ Yeni</button>
+    <button class="btn small" id="profDel" type="button">Sil</button>
+  </div>
+
+  <h2 id="showHead">Yazdırılacak</h2>
   <div class="seg" id="showSeg">
     <button data-v="P">CL3000P</button>
     <button data-v="B">CL3000B</button>
     <button data-v="PB">İkisi</button>
   </div>
   <label class="c" style="margin-top:10px"><input type="checkbox" data-o="shift"> <span><b>Shift sayfası:</b> hücreyi ikiye böl (üst normal, alt shift)</span></label>
+  <label class="c"><input type="checkbox" data-o="pluShow"> <span><b>PLU kodu:</b> ismin üstüne yaz (1001 / PATATES)</span></label>
   <button class="btn primary" id="printBtn">Yazdır</button>
 
   <ol class="howto">
@@ -272,7 +301,7 @@
       <button data-v="names">Normal</button>
       <button data-v="shift">Shift</button>
     </div>
-    <p class="hint">Her satır bir tuş, soldan sağa, yukarıdan aşağı. Tuş içinde alt satıra geçmek için <b>/</b> koy. Boş satır = boş tuş. # ile başlayan satırlar sadece açıklama.</p>
+    <p class="hint">Her satır bir tuş, soldan sağa, yukarıdan aşağı. Başa yazılan sayı PLU kodu olur (<b>1001 PATATES</b>). Tuş içinde alt satıra geçmek için <b>/</b> koy. Boş satır = boş tuş. # ile başlayan satırlar sadece açıklama.</p>
     <textarea id="bulkText" rows="22" spellcheck="false"></textarea>
     <button class="btn small" id="bulkApply">Uygula</button>
     <button class="btn small" id="bulkCopy">Diğer teraziye de kopyala</button>
@@ -292,6 +321,7 @@
 <main id="main">
   <div class="mbar">
     <div class="top"><h1>Terazi Tuş Kağıdı</h1><button class="btn primary" id="printBtnM" type="button">Yazdır</button></div>
+    <select id="profSelM" class="psel" aria-label="Düzen seç" style="margin-bottom:8px"></select>
     <div class="seg" id="showSegM">
       <button data-v="P">CL3000P</button>
       <button data-v="B">CL3000B</button>
@@ -305,10 +335,16 @@
 <div class="sheet" id="sheet">
   <div class="sheet-card" role="dialog" aria-label="Tuş düzenle">
     <div class="sheet-head"><b id="sheetTitle"></b><button type="button" id="sheetClose" aria-label="Kapat">×</button></div>
-    <label class="f">Normal tuş<input id="edN" autocomplete="off" enterkeyhint="next"></label>
+    <div class="edrow">
+      <label class="f plu-f">PLU<input id="epN" inputmode="numeric" autocomplete="off" enterkeyhint="next"></label>
+      <label class="f">Normal tuş<input id="edN" autocomplete="off" enterkeyhint="next"></label>
+    </div>
     <div class="catpick" id="catN"></div>
     <div id="shiftBox">
-      <label class="f">Shift tuşu (alt yarı)<input id="edS" autocomplete="off" enterkeyhint="done"></label>
+      <div class="edrow">
+        <label class="f plu-f">PLU<input id="epS" inputmode="numeric" autocomplete="off" enterkeyhint="next"></label>
+        <label class="f">Shift tuşu (alt yarı)<input id="edS" autocomplete="off" enterkeyhint="done"></label>
+      </div>
       <div class="catpick" id="catS"></div>
     </div>
     <p class="hint">Alt satıra geçirmek için araya <b>/</b> koy (örn. ÇERİ / DOMATES).</p>
@@ -347,7 +383,7 @@
   var DEF_OPTS = {
     show: 'P', calX: 100, calY: 100, font: 'bahn', maxPt: 11, minPt: 5, lineW: 0.2, lines: 'box',
     shift: true, upper: true, hyph: true, frame: true, crop: true, nums: false, rulers: true,
-    colors: true, catColors: {}
+    colors: true, catColors: {}, pluShow: false
   };
 
   // Hücre renkleri: açık tonlar, üstündeki siyah yazı rahat okunsun
@@ -372,11 +408,11 @@
       'NEKTARİN', 'AYVA', 'NAR', 'ÜZÜM', 'GLOBE', 'ERİK', 'ERİĞİ', 'KİVİ', 'KAVUN', 'KARPUZ', 'KİRAZ', 'VİŞNE',
       'İNCİR', 'ÇİLEK', 'ÇİLEĞİ', 'KAYISI', 'ANANAS', 'AVOKADO', 'MANGO', 'DUT', 'BÖĞÜRTLEN', 'AHUDUDU', 'MUŞMULA',
       'KIZILCIK', 'YENİDÜNYA', 'LİÇİ', 'PAPAYA', 'BERGAMOT', 'KUMKUAT', 'TRABZON HURMASI', 'CENNET HURMASI',
-      'YABAN MERSİNİ']],
-    ['sebze', ['DOMATES', 'SALATALIK', 'HIYAR', 'PATATES', 'SOĞAN', 'SARIMSAK', 'BİBER', 'ÇARLİSTON', 'FASULYE',
-      'BARBUNYA', 'BÖRÜLCE', 'PATLICAN', 'KABAK', 'KABAĞI', 'BALKABAĞI', 'PIRASA', 'BEZELYE', 'LAHANA', 'KARALAHANA',
-      'BAMYA', 'KARNIBAHAR', 'BROKOLİ', 'TURP', 'HAVUÇ', 'ISPANAK', 'KEREVİZ', 'BAKLA', 'PANCAR', 'ENGİNAR', 'MANTAR',
-      'MISIR', 'KUŞKONMAZ', 'ZENCEFİL', 'YER ELMASI']]
+      'TRABZON HURMA', 'CENNET HURMA', 'YABAN MERSİNİ', 'HÜNNAP']],
+    ['sebze', ['DOMATES', 'SALATALIK', 'HIYAR', 'PATATES', 'SOĞAN', 'SARIMSAK', 'BİBER', 'DOLMABİBER', 'SİVRİ', 'KAPYA',
+      'ÇARLİSTON', 'FASULYE', 'BARBUNYA', 'BÖRÜLCE', 'PATLICAN', 'KABAK', 'KABAĞI', 'BALKABAĞI', 'PIRASA', 'BEZELYE',
+      'LAHANA', 'KARALAHANA', 'BAMYA', 'KARNIBAHAR', 'KARNABAHAR', 'BROKOLİ', 'TURP', 'HAVUÇ', 'ISPANAK', 'KEREVİZ',
+      'BAKLA', 'PANCAR', 'ENGİNAR', 'MANTAR', 'MISIR', 'KUŞKONMAZ', 'ZENCEFİL', 'YER ELMASI']]
   ];
   // Kelime sonuna gelebilen iyelik ekleri (BİBERİ, ELMASI, PEYNİRİ); ÇEKİRDEKSİZ gibi ekler eşleşmez
   var SUFFIXES = ['', 'I', 'İ', 'U', 'Ü', 'SI', 'Sİ', 'SU', 'SÜ', 'LARI', 'LERİ'];
@@ -400,31 +436,54 @@
   }
   function copy(o) { return JSON.parse(JSON.stringify(o)); }
 
-  function load() {
-    var s = null, old = false;
-    try {
-      s = JSON.parse(localStorage.getItem(KEY));
-      if (!s) { s = JSON.parse(localStorage.getItem(OLD_KEY)); old = !!s; }
-    } catch (e) { s = null; }
+  // Varsayılanların üstüne kayıtlı/aktarılan durumu giydirir
+  function buildState(s) {
     var base = { opts: copy(DEF_OPTS), models: {} };
     ['P', 'B'].forEach(function (k) {
       base.models[k] = copy(DEF_MODELS[k]);
       base.models[k].names = defaultNames();
       base.models[k].shift = {};
       base.models[k].cat = {};  // elle boyananlar: 'names:0-3' -> 'meyve' | 'none'
+      base.models[k].plu = {};  // PLU kodları: 'names:0-3' -> '1004'
     });
-    if (s && s.models) {
-      if (old && s.opts) { delete s.opts.lines; delete s.opts.shift; }  // eski kayıtta yeni varsayılanlar geçerli
+    if (s) {
       Object.assign(base.opts, s.opts || {});
-      ['P', 'B'].forEach(function (k) { if (s.models[k]) Object.assign(base.models[k], s.models[k]); });
+      ['P', 'B'].forEach(function (k) { if (s.models && s.models[k]) Object.assign(base.models[k], s.models[k]); });
     }
     return base;
   }
+  var PRISTINE = false;  // bu cihazda hiç kayıt yoksa: aktarılan düzen boş varsayılanın yerine geçer
+  function load() {
+    var s = null;
+    try {
+      s = JSON.parse(localStorage.getItem(KEY));
+      if (!s) {
+        s = JSON.parse(localStorage.getItem(OLD_KEY));
+        if (s && s.opts) { delete s.opts.lines; delete s.opts.shift; }  // eski kayıtta yeni varsayılanlar geçerli
+      }
+    } catch (e) { s = null; }
+    PRISTINE = !s;
+    return buildState(s);
+  }
   function save() {
+    PRISTINE = false;
     try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* tarayıcı izin vermiyorsa sorun değil */ }
   }
 
+  // ---------- Düzenler (birden çok market) ----------
+  // Etkin düzen KEY'de durur; diğerleri burada isimleriyle saklanır
+  var PKEY = 'terazi-tus-kagidi-duzenler';
+  function loadProfiles() {
+    var p = null;
+    try { p = JSON.parse(localStorage.getItem(PKEY)); } catch (e) { p = null; }
+    return p && p.active ? p : { active: 'Market 1', others: {} };
+  }
+  function saveProfiles() {
+    try { localStorage.setItem(PKEY, JSON.stringify(PR)); } catch (e) { /* sorun değil */ }
+  }
+
   var S = load();
+  var PR = loadProfiles();
   var qp = new URLSearchParams(location.search);
   if (/^(P|B|PB)$/.test(qp.get('show') || '')) S.opts.show = qp.get('show');
   var bulkModel = 'P', bulkLayer = 'names';
@@ -526,9 +585,9 @@
     var ox = AX + (m.w - g.gw) / 2 + m.dx;
     var oy = AY + (m.h - g.gh) / 2 + m.dy;
 
-    text(page, 'hdr', SX, 9, 'CAS ' + m.label + '  ·  iç alan ' + fmt(m.w) + ' × ' + fmt(m.h) + ' mm  ·  hücre ' +
-      fmt(g.cw) + ' × ' + fmt(g.ch) + ' mm  ·  ayraç ' + fmt(m.gx) + (m.gx === m.gy ? '' : ' / ' + fmt(m.gy)) +
-      ' mm  ·  ' + m.cols + '×' + m.rows + ' tuş' + (b ? '  ·  kesim payı ' + fmt(b) + ' mm' : ''));
+    text(page, 'hdr', SX, 9, PR.active + '  ·  CAS ' + m.label + '  ·  iç alan ' + fmt(m.w) + ' × ' + fmt(m.h) +
+      ' mm  ·  hücre ' + fmt(g.cw) + ' × ' + fmt(g.ch) + ' mm  ·  ayraç ' + fmt(m.gx) +
+      (m.gx === m.gy ? '' : ' / ' + fmt(m.gy)) + ' mm' + (b ? '  ·  kesim payı ' + fmt(b) + ' mm' : ''));
 
     if (o.frame) {
       hline(page, SX, SX + PW, SY, 0.15, 'frame');
@@ -554,6 +613,8 @@
         // Shift açıkken üst yarı normal tuş, alt yarı shift tuşu
         var layers = o.shift ? ['names', 'shift'] : ['names'];
         var lh = o.shift ? (ih - SPLIT) / 2 : ih;
+        // PLU kodu ismin üstünde ayrı bir şeritte, sabit puntoda
+        var plh = o.pluShow ? (o.shift ? 2.6 : 3.4) : 0;
         for (var li = 0; li < layers.length; li++) {
           // Zemin rengi hücrenin (shift'te yarısının) tamamını kaplar, çerçeve üstüne çizilir
           var fh = g.ch * ky / layers.length;
@@ -563,7 +624,21 @@
           fill.dataset.key = key;
           paintFill(fill);
           cell.appendChild(fill);
-          var inner = abs(el('div', 'in'), pad, pad + li * (lh + SPLIT), iw, lh);
+          var top = pad + li * (lh + SPLIT);
+          if (plh) {
+            var pbox = abs(el('div', 'pl'), pad, top, iw, plh);
+            var p = el('span', 'p');
+            if (!MOBILE) p.setAttribute('contenteditable', 'plaintext-only');
+            p.dataset.model = k;
+            p.dataset.layer = layers[li];
+            p.dataset.key = key;
+            p.textContent = m.plu[layers[li] + ':' + key] || '';
+            p.style.fontSize = (o.shift ? 6 : 7.5) + 'pt';
+            p.style.lineHeight = plh * ky + 'mm';
+            pbox.appendChild(p);
+            cell.appendChild(pbox);
+          }
+          var inner = abs(el('div', 'in'), pad, top + plh * ky, iw, lh - plh * ky);
           var t = el('span', 't' + (layers[li] === 'shift' ? ' s' : ''));
           if (!MOBILE) t.setAttribute('contenteditable', 'plaintext-only');
           t.dataset.model = k;
@@ -753,6 +828,13 @@
   // ---------- Hücre düzenleme ----------
   pagesEl.addEventListener('input', function (e) {
     var t = e.target;
+    if (t.classList.contains('p')) {
+      var pm = S.models[t.dataset.model], pk = t.dataset.layer + ':' + t.dataset.key, pv = t.innerText.trim();
+      if (pv) pm.plu[pk] = pv; else delete pm.plu[pk];
+      save();
+      if (t.dataset.model === bulkModel && t.dataset.layer === bulkLayer) fillBulk();
+      return;
+    }
     if (!t.classList.contains('t')) return;
     S.models[t.dataset.model][t.dataset.layer][t.dataset.key] = t.innerText.replace(/\n+$/, '');
     save();
@@ -778,18 +860,26 @@
   pagesEl.addEventListener('focusout', function (e) {
     if (e.target.classList.contains('t')) fitOne(e.target, false);
   });
+  // PLU satırında Enter: alt satır açma, isme geç
+  pagesEl.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' || !e.target.classList.contains('p')) return;
+    e.preventDefault();
+    var t = e.target.closest('.cell').querySelector('.t' + sel(e.target.dataset.model, e.target.dataset.layer, e.target.dataset.key));
+    if (t) t.focus();
+  });
   pagesEl.addEventListener('click', function (e) {
     var cell = e.target.closest('.cell');
     if (brush || !cell) return;
     var ts = cell.querySelectorAll('.t'), rc = cell.getBoundingClientRect();
     var t = ts.length > 1 && e.clientY > rc.top + rc.height / 2 ? ts[1] : ts[0];
     if (MOBILE) { openSheet(t.dataset.model, t.dataset.key, t.dataset.layer); return; }
-    if (!e.target.classList.contains('t')) t.focus();
+    if (!e.target.classList.contains('t') && !e.target.classList.contains('p')) t.focus();
   });
 
   // ---------- Telefon: tuş düzenleme penceresi ----------
   var sheet = document.getElementById('sheet');
   var edN = document.getElementById('edN'), edS = document.getElementById('edS');
+  var epN = document.getElementById('epN'), epS = document.getElementById('epS');
   var cur = null;  // { k: 'P', key: '0-3' }
   function toInput(s) { return (s || '').replace(/\n/g, ' / '); }
   function fromInput(v) { return v.trim().split(/\s*\/\s*/).join('\n').replace(/\n+$/, ''); }
@@ -841,6 +931,9 @@
     document.getElementById('sheetTitle').textContent = m.label + ' · ' + (rc[0] + 1) + '. sıra, ' + (rc[1] + 1) + '. tuş';
     edN.value = toInput(m.names[key]);
     edS.value = toInput(m.shift[key]);
+    epN.value = m.plu['names:' + key] || '';
+    epS.value = m.plu['shift:' + key] || '';
+    document.querySelectorAll('.sheet .plu-f').forEach(function (l) { l.style.display = S.opts.pluShow ? '' : 'none'; });
     document.getElementById('shiftBox').style.display = S.opts.shift ? '' : 'none';
     syncSheetCats();
     var c = cellEl(k, key);
@@ -877,10 +970,21 @@
       syncSheetCats();
     });
   });
+  [[epN, 'names'], [epS, 'shift']].forEach(function (p) {
+    p[0].addEventListener('input', function () {
+      var m = S.models[cur.k], id = p[1] + ':' + cur.key, v = p[0].value.trim();
+      if (v) m.plu[id] = v; else delete m.plu[id];
+      save();
+      var span = pagesEl.querySelector('.p' + sel(cur.k, p[1], cur.key));
+      if (span) span.textContent = v;
+    });
+  });
+  epN.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); edN.focus(); } });
+  epS.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); edS.focus(); } });
   edN.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter') return;
     e.preventDefault();
-    if (S.opts.shift) edS.focus(); else stepSheet(1);
+    if (S.opts.shift) (S.opts.pluShow ? epS : edS).focus(); else stepSheet(1);
   });
   edS.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter') return;
@@ -1077,6 +1181,7 @@
       S.models[k].names = old.names;
       S.models[k].shift = old.shift;
       S.models[k].cat = old.cat;
+      S.models[k].plu = old.plu;
     });
     S.opts.calX = 100;
     S.opts.calY = 100;
@@ -1091,7 +1196,10 @@
     var m = S.models[bulkModel], map = m[bulkLayer], out = [];
     for (var r = 0; r < m.rows; r++) {
       out.push('# ' + (r + 1) + '. sıra' + (bulkLayer === 'shift' ? ' (shift)' : ''));
-      for (var c = 0; c < m.cols; c++) out.push((map[r + '-' + c] || '').replace(/\n/g, ' / '));
+      for (var c = 0; c < m.cols; c++) {
+        var code = m.plu[bulkLayer + ':' + r + '-' + c];
+        out.push(((code ? code + ' ' : '') + (map[r + '-' + c] || '').replace(/\n/g, ' / ')).trim());
+      }
     }
     bulkText.value = out.join('\n');
     document.querySelectorAll('#bulkSeg button').forEach(function (b) {
@@ -1101,16 +1209,24 @@
       b.classList.toggle('on', b.dataset.v === bulkLayer);
     });
   }
+  // Satır başındaki sayı PLU kodu sayılır: "1001 PATATES"
   function parseBulk() {
-    var m = S.models[bulkModel], names = {}, i = 0;
+    var m = S.models[bulkModel], names = {}, plu = {}, i = 0;
     bulkText.value.split(/\r?\n/).forEach(function (line) {
       if (/^\s*#/.test(line)) return;
-      var r = Math.floor(i / m.cols), c = i % m.cols;
-      var v = line.trim().split(/\s*\/\s*/).join('\n');
-      if (v) names[r + '-' + c] = v;
+      var key = Math.floor(i / m.cols) + '-' + (i % m.cols);
+      var mm = line.trim().match(/^(\d{1,7})(?:\s+(.*))?$/), name = line;
+      if (mm) { plu[key] = mm[1]; name = mm[2] || ''; }
+      var v = name.trim().split(/\s*\/\s*/).join('\n');
+      if (v) names[key] = v;
       i++;
     });
-    return names;
+    return { names: names, plu: plu };
+  }
+  function applyBulk(m, layer, res) {
+    m[layer] = copy(res.names);
+    Object.keys(m.plu).forEach(function (id) { if (id.indexOf(layer + ':') === 0) delete m.plu[id]; });
+    Object.keys(res.plu).forEach(function (key) { m.plu[layer + ':' + key] = res.plu[key]; });
   }
   document.getElementById('bulkSeg').addEventListener('click', function (e) {
     var b = e.target.closest('button');
@@ -1125,7 +1241,7 @@
     fillBulk();
   });
   document.getElementById('bulkApply').addEventListener('click', function () {
-    S.models[bulkModel][bulkLayer] = parseBulk();
+    applyBulk(S.models[bulkModel], bulkLayer, parseBulk());
     save();
     render();
     fillBulk();
@@ -1134,8 +1250,9 @@
     var other = bulkModel === 'P' ? 'B' : 'P';
     var layerName = bulkLayer === 'shift' ? 'shift' : 'normal';
     if (!confirm(S.models[bulkModel].label + ' ' + layerName + ' listesi ' + S.models[other].label + ' üzerine yazılsın mı?')) return;
-    S.models[bulkModel][bulkLayer] = parseBulk();
-    S.models[other][bulkLayer] = copy(S.models[bulkModel][bulkLayer]);
+    var res = parseBulk();
+    applyBulk(S.models[bulkModel], bulkLayer, res);
+    applyBulk(S.models[other], bulkLayer, res);
     save();
     render();
   });
@@ -1172,7 +1289,7 @@
     });
   }
   function packState() {
-    var json = new TextEncoder().encode(JSON.stringify({ v: 1, opts: S.opts, models: S.models }));
+    var json = new TextEncoder().encode(JSON.stringify({ v: 1, name: PR.active, opts: S.opts, models: S.models }));
     if (window.CompressionStream) return pipe(json, new CompressionStream('deflate-raw')).then(function (b) { return 'z' + b64u(b); });
     return Promise.resolve('j' + b64u(json));
   }
@@ -1181,16 +1298,19 @@
     var p = str[0] === 'z' ? pipe(bytes, new DecompressionStream('deflate-raw')) : Promise.resolve(bytes);
     return p.then(function (b) { return JSON.parse(new TextDecoder().decode(b)); });
   }
-  function applyState(s) {
-    var show = S.opts.show;
-    Object.assign(S.opts, s.opts || {});
-    S.opts.show = show;
-    ['P', 'B'].forEach(function (k) { if (s.models && s.models[k]) Object.assign(S.models[k], s.models[k]); });
-    save();
-    fillInputs();
-    fillCatColors();
-    render();
-    fillBulk();
+  // Linkteki düzen kendi adıyla eklenir; aynı adda düzen varsa onun yerine geçer, diğerlerine dokunulmaz
+  function importName(s) { return String(s.name || 'Aktarılan düzen').trim().slice(0, 40) || 'Aktarılan düzen'; }
+  function importState(s) {
+    var name = importName(s), st = buildState(s);
+    if (PRISTINE) {  // bu cihazda daha önce hiçbir şey yoktu: varsayılan örnek düzeni tutmaya gerek yok
+      S = st;
+      PR = { active: name, others: {} };
+      save();
+      saveProfiles();
+      refreshAll();
+      return;
+    }
+    switchTo(name, st);
   }
   document.getElementById('xferBtn').addEventListener('click', function () {
     var msg = document.getElementById('xferMsg'), out = document.getElementById('xferOut');
@@ -1218,11 +1338,96 @@
   if (hm) {
     unpackState(hm[1]).then(function (s) {
       history.replaceState(null, '', location.pathname + location.search);
-      if (confirm('Linkteki isimler, renkler ve ölçüler bu cihaza yüklensin mi? Buradaki mevcut isimlerin yerine geçer.')) applyState(s);
+      var name = importName(s), exists = name === PR.active || !!PR.others[name];
+      var q = PRISTINE ? 'Linkteki "' + name + '" düzeni yüklensin mi?'
+        : exists ? 'Bu cihazdaki "' + name + '" düzeni linktekiyle değiştirilsin mi?'
+        : '"' + name + '" düzeni bu cihaza eklensin mi? Buradaki diğer düzenler yerinde kalır.';
+      if (confirm(q)) importState(s);
     }).catch(function () {
       alert('Aktarım linki okunamadı. Link eksik kopyalanmış olabilir.');
     });
   }
+
+  // ---------- Düzen seçimi ----------
+  function profileNames() {
+    return [PR.active].concat(Object.keys(PR.others)).sort(function (a, b) { return a.localeCompare(b, 'tr'); });
+  }
+  function fillProfiles() {
+    ['profSel', 'profSelM'].forEach(function (id) {
+      var s = document.getElementById(id);
+      s.innerHTML = '';
+      profileNames().forEach(function (n) {
+        var o = el('option');
+        o.value = n;
+        o.textContent = n;
+        s.appendChild(o);
+      });
+      s.value = PR.active;
+    });
+    document.getElementById('profName').value = PR.active;
+  }
+  function refreshAll() {
+    closeSheet();
+    fillInputs();
+    fillCatColors();
+    render();
+    fillBulk();
+    fillProfiles();
+  }
+  // name düzenine geç; state verilirse o düzen bununla değiştirilir
+  function switchTo(name, state) {
+    if (name === PR.active && !state) return;
+    if (name !== PR.active) PR.others[PR.active] = copy(S);
+    S = state || buildState(PR.others[name]);
+    delete PR.others[name];
+    PR.active = name;
+    save();
+    saveProfiles();
+    refreshAll();
+  }
+  ['profSel', 'profSelM'].forEach(function (id) {
+    document.getElementById(id).addEventListener('change', function (e) { switchTo(e.target.value); });
+  });
+  document.getElementById('profNew').addEventListener('click', function () {
+    var n = 2, names = profileNames();
+    while (names.indexOf('Market ' + n) >= 0) n++;
+    // Ölçüler ve ayarlar bu düzenden, tuşlar boş
+    var st = buildState({ opts: copy(S.opts) });
+    ['P', 'B'].forEach(function (k) {
+      DIM_FIELDS.forEach(function (f) { st.models[k][f[0]] = S.models[k][f[0]]; });
+      st.models[k].auto = S.models[k].auto;
+      st.models[k].names = {};
+    });
+    switchTo('Market ' + n, st);
+  });
+  document.getElementById('profName').addEventListener('change', function (e) {
+    var v = e.target.value.trim().slice(0, 40);
+    if (!v || v === PR.active || PR.others[v]) {
+      if (v && PR.others[v]) alert('"' + v + '" adında başka bir düzen var.');
+      e.target.value = PR.active;
+      return;
+    }
+    PR.active = v;
+    saveProfiles();
+    fillProfiles();
+    render();
+  });
+  document.getElementById('profDel').addEventListener('click', function () {
+    if (!confirm('"' + PR.active + '" düzeni bu cihazdan silinsin mi?')) return;
+    var rest = Object.keys(PR.others);
+    if (!rest.length) {
+      S = buildState(null);
+      PR = { active: 'Market 1', others: {} };
+    } else {
+      S = buildState(PR.others[rest[0]]);
+      delete PR.others[rest[0]];
+      PR.active = rest[0];
+    }
+    save();
+    saveProfiles();
+    refreshAll();
+  });
+  fillProfiles();
 })();
 </script>
 </body>
